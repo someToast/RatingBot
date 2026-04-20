@@ -2,7 +2,7 @@
 
 Song Rater is a single-window iOS app for rating the track currently playing in Apple Music.
 
-The app reads the Music app's current song, adds it to one of five playlists named `Rate 1` through `Rate 5`, and speaks the rating confirmation. App Intents expose the same rating actions to Siri and Shortcuts.
+The app reads the Music app's current song, creates five app-maintained playlists named `Rate 1` through `Rate 5` on first run, adds rated songs to the matching playlist, and speaks the rating confirmation. App Intents expose the same rating actions to Siri and Shortcuts.
 
 ## Requirements
 

@@ -7,6 +7,7 @@ enum MusicRatingError: LocalizedError {
     case noSongPlaying
     case invalidRating
     case playlistUnavailable(Int)
+    case addFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -18,6 +19,8 @@ enum MusicRatingError: LocalizedError {
             return "Choose a rating from 1 to 5 stars."
         case .playlistUnavailable(let rating):
             return "Could not create or find the Rate \(rating) playlist."
+        case .addFailed(let message):
+            return message
         }
     }
 }
@@ -38,6 +41,7 @@ final class MusicRatingService: ObservableObject {
         4: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38004")!,
         5: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38005")!
     ]
+    private var hasPreparedRatingPlaylists = false
 
     private init() {
         refreshNowPlaying()
@@ -69,6 +73,9 @@ final class MusicRatingService: ObservableObject {
             authorizationStatus = MPMediaLibrary.authorizationStatus()
         }
         refreshNowPlaying()
+        if authorizationStatus == .authorized && !hasPreparedRatingPlaylists {
+            await prepareRatingPlaylists()
+        }
     }
 
     func refreshNowPlaying() {
@@ -88,7 +95,7 @@ final class MusicRatingService: ObservableObject {
         }
 
         let playlist = try await playlist(for: rating)
-        try await playlist.add([item])
+        try await add(item, to: playlist)
 
         let track = item.songRaterTrack
         currentTrack = track
@@ -112,19 +119,33 @@ final class MusicRatingService: ObservableObject {
         }
     }
 
+    private func prepareRatingPlaylists() async {
+        do {
+            for rating in 1...5 {
+                _ = try await playlist(for: rating)
+            }
+            hasPreparedRatingPlaylists = true
+            if statusMessage == "Ready" {
+                statusMessage = "Rating playlists ready"
+            }
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
     private func playlist(for rating: Int) async throws -> MPMediaPlaylist {
         guard let uuid = playlistIDs[rating] else {
             throw MusicRatingError.invalidRating
         }
 
-        let metadata = MPMediaPlaylistCreationMetadata(name: "Rate \(rating)")
+        let metadata = MPMediaPlaylistCreationMetadata(name: playlistName(for: rating))
         metadata.authorDisplayName = "Song Rater"
         metadata.descriptionText = "Songs rated \(rating) star\(rating == 1 ? "" : "s") in Song Rater."
 
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<MPMediaPlaylist, Error>) in
             MPMediaLibrary.default().getPlaylist(with: uuid, creationMetadata: metadata) { playlist, error in
                 if let error {
-                    continuation.resume(throwing: error)
+                    continuation.resume(throwing: MusicRatingError.addFailed(error.localizedDescription))
                 } else if let playlist {
                     continuation.resume(returning: playlist)
                 } else {
@@ -132,5 +153,41 @@ final class MusicRatingService: ObservableObject {
                 }
             }
         }
+    }
+
+    private func add(_ item: MPMediaItem, to playlist: MPMediaPlaylist) async throws {
+        if let storeID = item.playbackStoreID.nilIfBlank, storeID != "0" {
+            try await addStoreItem(storeID, to: playlist)
+        } else {
+            try await addMediaItem(item, to: playlist)
+        }
+    }
+
+    private func addStoreItem(_ storeID: String, to playlist: MPMediaPlaylist) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            playlist.addItem(withProductID: storeID) { error in
+                if let error {
+                    continuation.resume(throwing: MusicRatingError.addFailed(error.localizedDescription))
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    private func addMediaItem(_ item: MPMediaItem, to playlist: MPMediaPlaylist) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            playlist.add([item]) { error in
+                if let error {
+                    continuation.resume(throwing: MusicRatingError.addFailed(error.localizedDescription))
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    private func playlistName(for rating: Int) -> String {
+        "Rate \(rating)"
     }
 }
