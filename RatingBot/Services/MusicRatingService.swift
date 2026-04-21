@@ -36,11 +36,11 @@ final class MusicRatingService: ObservableObject {
 
     private let player = MPMusicPlayerController.systemMusicPlayer
     private let playlistIDs: [Int: UUID] = [
-        1: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38001")!,
-        2: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38002")!,
-        3: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38003")!,
-        4: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38004")!,
-        5: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38005")!
+        1: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1001")!,
+        2: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1002")!,
+        3: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1003")!,
+        4: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1004")!,
+        5: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1005")!
     ]
     private var hasPreparedRatingPlaylists = false
     private var currentTrackIdentifier: String?
@@ -197,7 +197,7 @@ final class MusicRatingService: ObservableObject {
     }
 
     private func playlistName(for rating: Int) -> String {
-        "Rate \(rating)"
+        "RatingBot \(rating)"
     }
 
     private func trackIdentifier(for item: MPMediaItem) -> String {
