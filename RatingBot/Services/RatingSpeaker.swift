@@ -1,7 +1,6 @@
 import AVFoundation
 import Foundation
 
-@MainActor
 final class RatingSpeaker: NSObject, AVSpeechSynthesizerDelegate {
     static let shared = RatingSpeaker()
 
@@ -12,6 +11,7 @@ final class RatingSpeaker: NSObject, AVSpeechSynthesizerDelegate {
         synthesizer.delegate = self
     }
 
+    @MainActor
     func speak(rating: Int, track: NowPlayingTrack) {
         let phrase = "\(rating) stars, \(track.title) by \(track.artist)"
         let utterance = AVSpeechUtterance(string: phrase)
@@ -27,15 +27,20 @@ final class RatingSpeaker: NSObject, AVSpeechSynthesizerDelegate {
         synthesizer.speak(utterance)
     }
 
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        releaseAudioSession()
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            RatingSpeaker.releaseAudioSession()
+        }
     }
 
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        releaseAudioSession()
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            RatingSpeaker.releaseAudioSession()
+        }
     }
 
-    private func releaseAudioSession() {
+    @MainActor
+    private static func releaseAudioSession() {
         try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
     }
 }
