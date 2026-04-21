@@ -10,7 +10,11 @@ struct ContentView: View {
 
             VStack(spacing: 10) {
                 ForEach((1...5).reversed(), id: \.self) { rating in
-                    RatingButton(rating: rating, isBusy: pendingRating != nil) {
+                    RatingButton(
+                        rating: rating,
+                        isBusy: pendingRating != nil,
+                        isAssigned: musicService.assignedRating == rating
+                    ) {
                         Task {
                             await rate(rating)
                         }

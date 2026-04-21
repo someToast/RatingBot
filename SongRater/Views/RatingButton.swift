@@ -3,18 +3,20 @@ import SwiftUI
 struct RatingButton: View {
     let rating: Int
     let isBusy: Bool
+    let isAssigned: Bool
     let action: () -> Void
 
     private var stars: String {
-        String(repeating: "⭐️", count: rating)
+        String(repeating: "★", count: rating)
     }
 
     var body: some View {
         Button(action: action) {
             Text(stars)
-                .font(.system(size: 48, weight: .black))
+                .font(.system(size: 48))
                 .lineLimit(1)
                 .minimumScaleFactor(0.45)
+                .tracking(5)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
         }
@@ -22,10 +24,13 @@ struct RatingButton: View {
         .disabled(isBusy)
         .background(buttonColor)
         .foregroundStyle(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(.white.opacity(0.18), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(
+                    isAssigned ? .white.opacity(0.18) : .clear,
+                    lineWidth: isAssigned ? 1 : 0
+                )
         }
         .opacity(isBusy ? 0.58 : 1)
         .accessibilityLabel("\(rating) star\(rating == 1 ? "" : "s")")
@@ -34,15 +39,15 @@ struct RatingButton: View {
     private var buttonColor: Color {
         switch rating {
         case 5:
-            return Color(red: 0.08, green: 0.46, blue: 0.30)
+            return Color(red: 10 / 255, green: 95 / 255, blue: 207 / 255)
         case 4:
-            return Color(red: 0.14, green: 0.43, blue: 0.62)
+            return Color(red: 53 / 255, green: 74 / 255, blue: 157 / 255)
         case 3:
-            return Color(red: 0.49, green: 0.38, blue: 0.16)
+            return Color(red: 96 / 255, green: 52 / 255, blue: 108 / 255)
         case 2:
-            return Color(red: 0.62, green: 0.25, blue: 0.27)
+            return Color(red: 138 / 255, green: 31 / 255, blue: 58 / 255)
         default:
-            return Color(red: 0.37, green: 0.33, blue: 0.40)
+            return Color(red: 181 / 255, green: 9 / 255, blue: 9 / 255)
         }
     }
 }

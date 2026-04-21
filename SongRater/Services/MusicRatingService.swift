@@ -31,6 +31,7 @@ final class MusicRatingService: ObservableObject {
 
     @Published private(set) var currentTrack: NowPlayingTrack = .empty
     @Published private(set) var authorizationStatus = MPMediaLibrary.authorizationStatus()
+    @Published private(set) var assignedRating: Int?
     @Published var statusMessage = "Ready"
 
     private let player = MPMusicPlayerController.systemMusicPlayer
@@ -42,6 +43,7 @@ final class MusicRatingService: ObservableObject {
         5: UUID(uuidString: "D7367315-AD09-4938-B26C-3A28B8D38005")!
     ]
     private var hasPreparedRatingPlaylists = false
+    private var currentTrackIdentifier: String?
 
     private init() {
         refreshNowPlaying()
@@ -79,6 +81,11 @@ final class MusicRatingService: ObservableObject {
     }
 
     func refreshNowPlaying() {
+        let latestIdentifier = player.nowPlayingItem.flatMap(trackIdentifier(for:))
+        if latestIdentifier != currentTrackIdentifier {
+            assignedRating = nil
+        }
+        currentTrackIdentifier = latestIdentifier
         currentTrack = player.nowPlayingItem?.songRaterTrack ?? .empty
     }
 
@@ -98,6 +105,8 @@ final class MusicRatingService: ObservableObject {
         try await add(item, to: playlist)
 
         let track = item.songRaterTrack
+        assignedRating = rating
+        currentTrackIdentifier = trackIdentifier(for: item)
         currentTrack = track
         statusMessage = "Added to Rate \(rating)"
 
@@ -189,5 +198,15 @@ final class MusicRatingService: ObservableObject {
 
     private func playlistName(for rating: Int) -> String {
         "Rate \(rating)"
+    }
+
+    private func trackIdentifier(for item: MPMediaItem) -> String {
+        if let storeID = item.playbackStoreID.nilIfBlank {
+            return "store:\(storeID)"
+        }
+        if item.persistentID != 0 {
+            return "persistent:\(item.persistentID)"
+        }
+        return "fallback:\(item.songRaterTrack.title)|\(item.songRaterTrack.artist)"
     }
 }
