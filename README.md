@@ -1,23 +1,38 @@
 # RatingBot
 
-RatingBot is a single-window iOS app for rating the track currently playing in Apple Music.
+RatingBot is a single-window iPhone app for rating the track currently playing in Apple Music.
 
-The app reads the Music app's current song, creates five app-maintained playlists named `Rate 1` through `Rate 5` on first run, adds rated songs to the matching playlist, and speaks the rating confirmation. App Intents expose the same rating actions to Siri and Shortcuts.
+## What It Does
+
+- Shows the current song title and artist from the Music app
+- Creates five app-maintained playlists on first launch:
+  - `RatingBot 1`
+  - `RatingBot 2`
+  - `RatingBot 3`
+  - `RatingBot 4`
+  - `RatingBot 5`
+- Adds the current song to the matching playlist when the user picks a rating
+- Speaks a confirmation like `4 stars, Song Title by Artist Name`
+- Highlights the assigned rating button until the now-playing track changes
+- Exposes the same rating actions through App Shortcuts and Siri
+
+The playlists are looked up by stable app-maintained identifiers, so they continue to work even if the user moves them into subfolders in the Music app.
 
 ## Requirements
 
-- Xcode with iOS 17 SDK or newer
+- Xcode with an iOS 17 SDK or newer
 - A physical iPhone signed into Apple Music
 - Media Library permission granted on first launch
 
-## Siri
+## Siri and Shortcuts
 
-The project registers five App Shortcuts:
+RatingBot registers five App Shortcuts, one for each rating from 1 through 5.
 
-- "Give this song one with RatingBot"
-- "Give this song two with RatingBot"
-- "Give this song three with RatingBot"
-- "Give this song four with RatingBot"
-- "Give this song five with RatingBot"
+Supported phrasing includes variations like:
 
-iOS-provided App Shortcut phrases generally include the app name. To use the exact phrase "Hey Siri, give this song n", add a custom voice phrase to the shortcut in the Shortcuts app.
+- `Give this song five with RatingBot`
+- `Give this song 5 stars using RatingBot`
+- `Give this track three with RatingBot`
+- `Give this track 1 star using RatingBot`
+
+The app name is usually part of the built-in shortcut phrase matching. If you want a more customized Siri phrase, add one in the Shortcuts app after installing the app on your device.
