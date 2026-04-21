@@ -55,13 +55,15 @@ struct ContentView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(Color(red: 174 / 255, green: 174 / 255, blue: 178 / 255))
                 .lineLimit(1)
+                .frame(height: 16, alignment: .top)
+                .opacity(statusText.isEmpty ? 0 : 1)
         }
         .frame(maxWidth: .infinity)
     }
 
     private var transportControls: some View {
         HStack(spacing: 0) {
-            transportButton(systemName: "backward.end.fill", action: musicService.skipToPreviousTrack)
+            transportButton(systemName: "backward.fill", action: musicService.skipToPreviousTrack)
 
             Spacer(minLength: 18)
 
@@ -73,7 +75,7 @@ struct ContentView: View {
 
             Spacer(minLength: 18)
 
-            transportButton(systemName: "forward.end.fill", action: musicService.skipToNextTrack)
+            transportButton(systemName: "forward.fill", action: musicService.skipToNextTrack)
         }
         .frame(height: 80)
     }
