@@ -28,8 +28,8 @@ struct RatingButton: View {
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(
-                    isAssigned ? .white.opacity(0.18) : .clear,
-                    lineWidth: isAssigned ? 1 : 0
+                    isAssigned ? .yellow.opacity(1) : .white.opacity(0.18),
+                    lineWidth: isAssigned ? 12 : 1
                 )
         }
         .opacity(isBusy ? 0.58 : 1)
