@@ -1,7 +1,7 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
 
-final class RatingSpeaker: NSObject, AVSpeechSynthesizerDelegate {
+final class RatingSpeaker: NSObject, @preconcurrency AVSpeechSynthesizerDelegate {
     static let shared = RatingSpeaker()
 
     private let synthesizer = AVSpeechSynthesizer()
