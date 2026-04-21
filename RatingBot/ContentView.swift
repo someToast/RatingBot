@@ -60,7 +60,7 @@ struct ContentView: View {
 
     private var statusText: String {
         if let pendingRating {
-            return "Adding to Rate \(pendingRating)..."
+            return "Adding to RatingBot \(pendingRating)..."
         }
         return musicService.statusMessage
     }

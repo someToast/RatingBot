@@ -18,7 +18,7 @@ enum MusicRatingError: LocalizedError {
         case .invalidRating:
             return "Choose a rating from 1 to 5 stars."
         case .playlistUnavailable(let rating):
-            return "Could not create or find the Rate \(rating) playlist."
+            return "Could not create or find the RatingBot \(rating) playlist."
         case .addFailed(let message):
             return message
         }
@@ -84,6 +84,9 @@ final class MusicRatingService: ObservableObject {
         let latestIdentifier = player.nowPlayingItem.flatMap(trackIdentifier(for:))
         if latestIdentifier != currentTrackIdentifier {
             assignedRating = nil
+            if isAddedStatusMessage(statusMessage) {
+                statusMessage = ""
+            }
         }
         currentTrackIdentifier = latestIdentifier
         currentTrack = player.nowPlayingItem?.songRaterTrack ?? .empty
@@ -108,7 +111,7 @@ final class MusicRatingService: ObservableObject {
         assignedRating = rating
         currentTrackIdentifier = trackIdentifier(for: item)
         currentTrack = track
-        statusMessage = "Added to Rate \(rating)"
+        statusMessage = "Added to \(playlistName(for: rating))"
 
         if shouldSpeak {
             RatingSpeaker.shared.speak(rating: rating, track: track)
@@ -208,5 +211,9 @@ final class MusicRatingService: ObservableObject {
             return "persistent:\(item.persistentID)"
         }
         return "fallback:\(item.songRaterTrack.title)|\(item.songRaterTrack.artist)"
+    }
+
+    private func isAddedStatusMessage(_ message: String) -> Bool {
+        message.hasPrefix("Added to RatingBot ")
     }
 }
