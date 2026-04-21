@@ -1,17 +1,17 @@
 @preconcurrency import AVFoundation
 import Foundation
 
-final class RatingSpeaker: NSObject, @preconcurrency AVSpeechSynthesizerDelegate {
+@MainActor
+final class RatingSpeaker: NSObject, AVSpeechSynthesizerDelegate {
     static let shared = RatingSpeaker()
 
-    private let synthesizer = AVSpeechSynthesizer()
+    nonisolated(unsafe) private let synthesizer = AVSpeechSynthesizer()
 
     private override init() {
         super.init()
         synthesizer.delegate = self
     }
 
-    @MainActor
     func speak(rating: Int, track: NowPlayingTrack) {
         let phrase = "\(rating) stars, \(track.title) by \(track.artist)"
         let utterance = AVSpeechUtterance(string: phrase)
@@ -39,7 +39,6 @@ final class RatingSpeaker: NSObject, @preconcurrency AVSpeechSynthesizerDelegate
         }
     }
 
-    @MainActor
     private static func releaseAudioSession() {
         try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
     }
