@@ -21,9 +21,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>Song Rater needs access to the currently playing Music item so it can add rated songs to your rating playlists.</string>
+	<string>RatingBot needs access to the currently playing Music item so it can add rated songs to your rating playlists.</string>
 	<key>NSSiriUsageDescription</key>
-	<string>Song Rater uses Siri to rate the song currently playing in Music.</string>
+	<string>RatingBot uses Siri to rate the song currently playing in Music.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

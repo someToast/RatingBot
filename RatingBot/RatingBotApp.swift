@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct SongRaterApp: App {
+struct RatingBotApp: App {
     @StateObject private var musicService = MusicRatingService.shared
 
     var body: some Scene {

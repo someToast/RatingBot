@@ -148,8 +148,8 @@ final class MusicRatingService: ObservableObject {
         }
 
         let metadata = MPMediaPlaylistCreationMetadata(name: playlistName(for: rating))
-        metadata.authorDisplayName = "Song Rater"
-        metadata.descriptionText = "Songs rated \(rating) star\(rating == 1 ? "" : "s") in Song Rater."
+        metadata.authorDisplayName = "RatingBot"
+        metadata.descriptionText = "Songs rated \(rating) star\(rating == 1 ? "" : "s") in RatingBot."
 
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<MPMediaPlaylist, Error>) in
             MPMediaLibrary.default().getPlaylist(with: uuid, creationMetadata: metadata) { playlist, error in

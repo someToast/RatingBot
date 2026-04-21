@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A0000010000000000000001 /* SongRaterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000011 /* SongRaterApp.swift */; };
+		1A0000010000000000000001 /* RatingBotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000011 /* RatingBotApp.swift */; };
 		1A0000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000012 /* ContentView.swift */; };
 		1A0000010000000000000003 /* NowPlayingTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000013 /* NowPlayingTrack.swift */; };
 		1A0000010000000000000004 /* RatingSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000014 /* RatingSpeaker.swift */; };
@@ -18,8 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1A0000010000000000000010 /* SongRater.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SongRater.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1A0000010000000000000011 /* SongRaterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongRaterApp.swift; sourceTree = "<group>"; };
+		1A0000010000000000000010 /* RatingBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RatingBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0000010000000000000011 /* RatingBotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingBotApp.swift; sourceTree = "<group>"; };
 		1A0000010000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1A0000010000000000000013 /* NowPlayingTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingTrack.swift; sourceTree = "<group>"; };
 		1A0000010000000000000014 /* RatingSpeaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingSpeaker.swift; sourceTree = "<group>"; };
@@ -44,15 +44,15 @@
 		1A0000010000000000000030 = {
 			isa = PBXGroup;
 			children = (
-				1A0000010000000000000031 /* SongRater */,
+				1A0000010000000000000031 /* RatingBot */,
 				1A0000010000000000000032 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		1A0000010000000000000031 /* SongRater */ = {
+		1A0000010000000000000031 /* RatingBot */ = {
 			isa = PBXGroup;
 			children = (
-				1A0000010000000000000011 /* SongRaterApp.swift */,
+				1A0000010000000000000011 /* RatingBotApp.swift */,
 				1A0000010000000000000012 /* ContentView.swift */,
 				1A0000010000000000000033 /* Models */,
 				1A0000010000000000000034 /* Services */,
@@ -61,13 +61,13 @@
 				1A0000010000000000000018 /* Assets.xcassets */,
 				1A0000010000000000000019 /* Info.plist */,
 			);
-			path = SongRater;
+			path = RatingBot;
 			sourceTree = "<group>";
 		};
 		1A0000010000000000000032 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1A0000010000000000000010 /* SongRater.app */,
+				1A0000010000000000000010 /* RatingBot.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,9 +108,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1A0000010000000000000040 /* SongRater */ = {
+		1A0000010000000000000040 /* RatingBot */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1A0000010000000000000070 /* Build configuration list for PBXNativeTarget "SongRater" */;
+			buildConfigurationList = 1A0000010000000000000070 /* Build configuration list for PBXNativeTarget "RatingBot" */;
 			buildPhases = (
 				1A0000010000000000000041 /* Sources */,
 				1A0000010000000000000020 /* Frameworks */,
@@ -120,9 +120,9 @@
 			);
 			dependencies = (
 			);
-			name = SongRater;
-			productName = SongRater;
-			productReference = 1A0000010000000000000010 /* SongRater.app */;
+			name = RatingBot;
+			productName = RatingBot;
+			productReference = 1A0000010000000000000010 /* RatingBot.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -140,7 +140,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1A0000010000000000000060 /* Build configuration list for PBXProject "SongRater" */;
+			buildConfigurationList = 1A0000010000000000000060 /* Build configuration list for PBXProject "RatingBot" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -153,7 +153,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1A0000010000000000000040 /* SongRater */,
+				1A0000010000000000000040 /* RatingBot */,
 			);
 		};
 /* End PBXProject section */
@@ -174,7 +174,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A0000010000000000000001 /* SongRaterApp.swift in Sources */,
+				1A0000010000000000000001 /* RatingBotApp.swift in Sources */,
 				1A0000010000000000000002 /* ContentView.swift in Sources */,
 				1A0000010000000000000003 /* NowPlayingTrack.swift in Sources */,
 				1A0000010000000000000004 /* RatingSpeaker.swift in Sources */,
@@ -315,14 +315,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = SongRater/Info.plist;
+				INFOPLIST_FILE = RatingBot/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = radio.toast.SongRater;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = radio.toast.RatingBot;
+				PRODUCT_NAME = RatingBot;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -341,14 +341,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = SongRater/Info.plist;
+				INFOPLIST_FILE = RatingBot/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rmarquardt.SongRater;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = radio.toast.RatingBot;
+				PRODUCT_NAME = RatingBot;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -361,7 +361,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1A0000010000000000000060 /* Build configuration list for PBXProject "SongRater" */ = {
+		1A0000010000000000000060 /* Build configuration list for PBXProject "RatingBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1A0000010000000000000061 /* Debug */,
@@ -370,7 +370,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1A0000010000000000000070 /* Build configuration list for PBXNativeTarget "SongRater" */ = {
+		1A0000010000000000000070 /* Build configuration list for PBXNativeTarget "RatingBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1A0000010000000000000071 /* Debug */,

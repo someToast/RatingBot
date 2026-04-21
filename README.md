@@ -1,6 +1,6 @@
-# Song Rater
+# RatingBot
 
-Song Rater is a single-window iOS app for rating the track currently playing in Apple Music.
+RatingBot is a single-window iOS app for rating the track currently playing in Apple Music.
 
 The app reads the Music app's current song, creates five app-maintained playlists named `Rate 1` through `Rate 5` on first run, adds rated songs to the matching playlist, and speaks the rating confirmation. App Intents expose the same rating actions to Siri and Shortcuts.
 
@@ -14,10 +14,10 @@ The app reads the Music app's current song, creates five app-maintained playlist
 
 The project registers five App Shortcuts:
 
-- "Give this song one with Song Rater"
-- "Give this song two with Song Rater"
-- "Give this song three with Song Rater"
-- "Give this song four with Song Rater"
-- "Give this song five with Song Rater"
+- "Give this song one with RatingBot"
+- "Give this song two with RatingBot"
+- "Give this song three with RatingBot"
+- "Give this song four with RatingBot"
+- "Give this song five with RatingBot"
 
 iOS-provided App Shortcut phrases generally include the app name. To use the exact phrase "Hey Siri, give this song n", add a custom voice phrase to the shortcut in the Shortcuts app.

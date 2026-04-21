@@ -26,7 +26,7 @@ struct RateSongIntent: AppIntent {
     }
 }
 
-struct SongRaterShortcuts: AppShortcutsProvider {
+struct RatingBotShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: RateSongIntent(rating: 5),
