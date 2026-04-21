@@ -32,6 +32,9 @@ final class MusicRatingService: ObservableObject {
     @Published private(set) var currentTrack: NowPlayingTrack = .empty
     @Published private(set) var authorizationStatus = MPMediaLibrary.authorizationStatus()
     @Published private(set) var assignedRating: Int?
+    @Published private(set) var playbackDuration: TimeInterval = 0
+    @Published private(set) var currentPlaybackTime: TimeInterval = 0
+    @Published private(set) var playbackState: MPMusicPlaybackState = .stopped
     @Published var statusMessage = "Ready"
 
     private let player = MPMusicPlayerController.systemMusicPlayer
@@ -44,9 +47,11 @@ final class MusicRatingService: ObservableObject {
     ]
     private var hasPreparedRatingPlaylists = false
     private var currentTrackIdentifier: String?
+    private var playbackTimer: AnyCancellable?
 
     private init() {
         refreshNowPlaying()
+        updatePlaybackMetrics()
         player.beginGeneratingPlaybackNotifications()
         NotificationCenter.default.addObserver(
             self,
@@ -60,11 +65,17 @@ final class MusicRatingService: ObservableObject {
             name: .MPMusicPlayerControllerPlaybackStateDidChange,
             object: player
         )
+        playbackTimer = Timer.publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.updatePlaybackMetrics()
+            }
     }
 
     deinit {
         player.endGeneratingPlaybackNotifications()
         NotificationCenter.default.removeObserver(self)
+        playbackTimer?.cancel()
     }
 
     func requestAccessIfNeeded() async {
@@ -90,6 +101,7 @@ final class MusicRatingService: ObservableObject {
         }
         currentTrackIdentifier = latestIdentifier
         currentTrack = player.nowPlayingItem?.songRaterTrack ?? .empty
+        updatePlaybackMetrics()
     }
 
     func rateCurrentSong(_ rating: Int, shouldSpeak: Bool = true) async throws -> NowPlayingTrack {
@@ -122,6 +134,16 @@ final class MusicRatingService: ObservableObject {
 
     @objc private func nowPlayingDidChange() {
         refreshNowPlaying()
+    }
+
+    func skipToPreviousTrack() {
+        player.skipToPreviousItem()
+        refreshTransportStateSoon()
+    }
+
+    func skipToNextTrack() {
+        player.skipToNextItem()
+        refreshTransportStateSoon()
     }
 
     private func ensureAuthorized() async throws {
@@ -215,5 +237,22 @@ final class MusicRatingService: ObservableObject {
 
     private func isAddedStatusMessage(_ message: String) -> Bool {
         message.hasPrefix("Added to RatingBot ")
+    }
+
+    private func updatePlaybackMetrics() {
+        playbackState = player.playbackState
+        playbackDuration = max(player.nowPlayingItem?.playbackDuration ?? 0, 0)
+        if playbackDuration > 0 {
+            currentPlaybackTime = min(max(player.currentPlaybackTime, 0), playbackDuration)
+        } else {
+            currentPlaybackTime = 0
+        }
+    }
+
+    private func refreshTransportStateSoon() {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            self.refreshNowPlaying()
+        }
     }
 }

@@ -23,13 +23,13 @@ struct RatingButton: View {
         .buttonStyle(.plain)
         .disabled(isBusy)
         .background(buttonColor)
-        .foregroundStyle(.white)
+        .foregroundStyle(isAssigned ? .black : .white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(
-                    isAssigned ? .yellow.opacity(1) : .white.opacity(0.18),
-                    lineWidth: isAssigned ? 12 : 1
+                    isAssigned ? .clear : .white.opacity(0.18),
+                    lineWidth: isAssigned ? 0 : 1
                 )
         }
         .opacity(isBusy ? 0.58 : 1)
@@ -37,6 +37,10 @@ struct RatingButton: View {
     }
 
     private var buttonColor: Color {
+        if isAssigned {
+            return .yellow
+        }
+
         switch rating {
         case 5:
             return Color(red: 10 / 255, green: 95 / 255, blue: 207 / 255)
