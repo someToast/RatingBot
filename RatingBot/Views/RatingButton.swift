@@ -2,7 +2,8 @@ import SwiftUI
 
 struct RatingButton: View {
     let rating: Int
-    let isBusy: Bool
+    let isPending: Bool
+    let isDisabled: Bool
     let isAssigned: Bool
     let action: () -> Void
 
@@ -21,7 +22,7 @@ struct RatingButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(isBusy)
+        .disabled(isDisabled)
         .background(buttonColor)
         .foregroundStyle(isAssigned ? .black : .white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -32,7 +33,7 @@ struct RatingButton: View {
                     lineWidth: isAssigned ? 0 : 1
                 )
         }
-        .opacity(isBusy ? 0.58 : 1)
+        .opacity(isPending ? 0.58 : 1)
         .accessibilityLabel("\(rating) star\(rating == 1 ? "" : "s")")
     }
 

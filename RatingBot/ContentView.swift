@@ -1,39 +1,64 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
     @EnvironmentObject private var musicService: MusicRatingService
     @State private var pendingRating: Int?
+    @State private var fiveStarButtonFrame: CGRect = .zero
+    @State private var confettiTrigger = 0
 
     var body: some View {
-        VStack(spacing: 22) {
-            nowPlayingHeader
-            transportControls
-            progressIndicator
+        ZStack {
+            VStack(spacing: 22) {
+                nowPlayingHeader
+                transportControls
+                progressIndicator
 
-            VStack(spacing: 10) {
-                ForEach((1...5).reversed(), id: \.self) { rating in
-                    RatingButton(
-                        rating: rating,
-                        isBusy: pendingRating != nil,
-                        isAssigned: musicService.assignedRating == rating
-                    ) {
-                        Task {
-                            await rate(rating)
+                VStack(spacing: 10) {
+                    ForEach((1...5).reversed(), id: \.self) { rating in
+                        RatingButton(
+                            rating: rating,
+                            isPending: pendingRating == rating,
+                            isDisabled: pendingRating != nil,
+                            isAssigned: musicService.assignedRating == rating
+                        ) {
+                            triggerButtonHaptic()
+                            Task {
+                                await rate(rating)
+                            }
+                        }
+                        .background {
+                            if rating == 5 {
+                                GeometryReader { proxy in
+                                    Color.clear
+                                        .preference(
+                                            key: FiveStarButtonFrameKey.self,
+                                            value: proxy.frame(in: .named("ContentViewSpace"))
+                                        )
+                                }
+                            }
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 16)
+            .padding(.top, 34)
+            .padding(.bottom, 16)
+
+            StarConfettiBurst(
+                trigger: confettiTrigger,
+                origin: CGPoint(x: fiveStarButtonFrame.midX, y: fiveStarButtonFrame.midY)
+            )
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 34)
-        .padding(.bottom, 16)
+        .coordinateSpace(name: "ContentViewSpace")
         .background(Color(red: 0.06, green: 0.07, blue: 0.08))
         .foregroundStyle(.white)
         .task {
             await musicService.requestAccessIfNeeded()
         }
+        .onPreferenceChange(FiveStarButtonFrameKey.self) { fiveStarButtonFrame = $0 }
     }
 
     private var nowPlayingHeader: some View {
@@ -123,6 +148,9 @@ struct ContentView: View {
 
         do {
             _ = try await musicService.rateCurrentSong(rating)
+            if rating == 5 {
+                confettiTrigger += 1
+            }
         } catch {
             musicService.statusMessage = error.localizedDescription
         }
@@ -151,9 +179,26 @@ struct ContentView: View {
         let seconds = totalSeconds % 60
         return "\(minutes):" + String(format: "%02d", seconds)
     }
+
+    private func triggerButtonHaptic() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred(intensity: 0.9)
+    }
 }
 
 #Preview {
     ContentView()
         .environmentObject(MusicRatingService.shared)
+}
+
+private struct FiveStarButtonFrameKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next != .zero {
+            value = next
+        }
+    }
 }
