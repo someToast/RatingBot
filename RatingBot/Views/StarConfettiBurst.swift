@@ -33,6 +33,7 @@ final class ConfettiBurstView: UIView {
     ]
     private let particleCount = 48
     private let burstDuration: CFTimeInterval = 8.5
+    private let particleSize: CGFloat = 84
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -66,7 +67,7 @@ final class ConfettiBurstView: UIView {
             let color = colors[index % colors.count]
             let particleLayer = CALayer()
             particleLayer.contents = particleImage(for: color)
-            particleLayer.bounds = CGRect(x: 0, y: 0, width: 42, height: 42)
+            particleLayer.bounds = CGRect(x: 0, y: 0, width: particleSize, height: particleSize)
             particleLayer.position = origin
             particleLayer.opacity = 1
             particleLayer.contentsScale = UIScreen.main.scale
@@ -75,7 +76,7 @@ final class ConfettiBurstView: UIView {
 
             let horizontalDirection = ((pseudoRandom(base + 1) * 2) - 1)
             let xVelocity = horizontalDirection * (165 + pseudoRandom(base + 2) * 185)
-            let initialYVelocity = -(690 + pseudoRandom(base + 3) * 250)
+            let initialYVelocity = -(517.5 + pseudoRandom(base + 3) * 187.5)
             let gravity = 545 + pseudoRandom(base + 4) * 90
             let rotationAmount = ((pseudoRandom(base + 5) * 2) - 1) * CGFloat.pi * (3.6 + pseudoRandom(base + 6) * 2.8)
             let scale = 0.9 + pseudoRandom(base + 7) * 0.35
