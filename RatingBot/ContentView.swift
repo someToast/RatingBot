@@ -51,6 +51,8 @@ struct ContentView: View {
                 trigger: confettiTrigger,
                 origin: CGPoint(x: fiveStarButtonFrame.midX, y: fiveStarButtonFrame.midY)
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(false)
         }
         .coordinateSpace(name: "ContentViewSpace")
         .background(Color(red: 0.06, green: 0.07, blue: 0.08))

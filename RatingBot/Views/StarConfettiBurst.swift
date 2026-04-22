@@ -12,6 +12,10 @@ struct StarConfettiBurst: UIViewRepresentable {
     func updateUIView(_ uiView: ConfettiEmitterView, context: Context) {
         uiView.update(trigger: trigger, origin: origin)
     }
+
+    static func dismantleUIView(_ uiView: ConfettiEmitterView, coordinator: ()) {
+        uiView.reset()
+    }
 }
 
 final class ConfettiEmitterView: UIView {
@@ -47,16 +51,18 @@ final class ConfettiEmitterView: UIView {
     }
 
     func update(trigger: Int, origin: CGPoint) {
+        print("[RatingBot][Confetti] update trigger=\(trigger) origin=\(origin) bounds=\(bounds)")
         guard trigger > lastTrigger, origin != .zero else {
             lastTrigger = max(lastTrigger, trigger)
             return
         }
 
         lastTrigger = trigger
-        emit(from: origin)
+        emit(from: clamped(origin: origin))
     }
 
     private func emit(from origin: CGPoint) {
+        print("[RatingBot][Confetti] emit origin=\(origin) bounds=\(bounds)")
         stopEmissionWorkItem?.cancel()
         cleanupWorkItem?.cancel()
         activeEmitterLayer?.removeFromSuperlayer()
@@ -91,6 +97,15 @@ final class ConfettiEmitterView: UIView {
         }
         self.cleanupWorkItem = cleanupWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 10.5, execute: cleanupWorkItem)
+    }
+
+    func reset() {
+        stopEmissionWorkItem?.cancel()
+        cleanupWorkItem?.cancel()
+        activeEmitterLayer?.birthRate = 0
+        activeEmitterLayer?.removeFromSuperlayer()
+        activeEmitterLayer = nil
+        lastTrigger = 0
     }
 
     private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
@@ -142,11 +157,14 @@ final class ConfettiEmitterView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil {
-            stopEmissionWorkItem?.cancel()
-            cleanupWorkItem?.cancel()
-            activeEmitterLayer?.birthRate = 0
-            activeEmitterLayer?.removeFromSuperlayer()
-            activeEmitterLayer = nil
+            reset()
         }
+    }
+
+    private func clamped(origin: CGPoint) -> CGPoint {
+        CGPoint(
+            x: min(max(origin.x, 0), bounds.width),
+            y: min(max(origin.y, 0), bounds.height)
+        )
     }
 }
