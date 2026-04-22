@@ -59,8 +59,7 @@ struct StarConfettiBurst: View {
             for index in 0..<particleCount {
                 let particle = particle(for: index, trigger: trigger)
                 let position = particle.position(at: elapsed, from: origin)
-                var resolved = context.resolveSymbol(id: index)!
-                resolved.shading = .color(colors[particle.colorIndex % colors.count].opacity(max(0, 1 - elapsed / duration)))
+                let resolved = context.resolveSymbol(id: index)!
 
                 context.opacity = max(0, 1 - elapsed / duration)
                 context.translateBy(x: position.x, y: position.y)
@@ -77,7 +76,11 @@ struct StarConfettiBurst: View {
     @ViewBuilder
     private var confettiSymbols: some View {
         ForEach(0..<particleCount, id: \.self) { index in
-            ConfettiSymbol(particle: particle(for: index, trigger: trigger))
+            let particle = particle(for: index, trigger: trigger)
+            ConfettiSymbol(
+                particle: particle,
+                color: colors[particle.colorIndex % colors.count]
+            )
                 .tag(index)
         }
     }
@@ -85,10 +88,12 @@ struct StarConfettiBurst: View {
 
 private struct ConfettiSymbol: View {
     let particle: ConfettiParticle
+    let color: Color
 
     var body: some View {
         Image(systemName: "star.fill")
             .font(.system(size: particle.size, weight: .black))
+            .foregroundStyle(color)
     }
 }
 
