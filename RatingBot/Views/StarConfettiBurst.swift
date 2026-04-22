@@ -16,26 +16,31 @@ struct StarConfettiBurst: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
             let elapsed = timeline.date.timeIntervalSince(startDate)
-            let isActive = trigger > 0 && elapsed >= 0 && elapsed <= duration && origin != .zero
-            let opacity = max(0, 1 - (elapsed / duration))
 
-            ZStack {
-                if isActive {
-                    ForEach(0..<particleCount, id: \.self) { index in
-                        let particle = particle(for: index, trigger: trigger)
-                        let position = particle.position(at: elapsed, from: origin)
+            Canvas { context, _ in
+                guard trigger > 0, elapsed >= 0, elapsed <= duration, origin != .zero else { return }
 
-                        Image(systemName: "star.fill")
-                            .font(.system(size: particle.size, weight: .black))
-                            .foregroundStyle(colors[particle.colorIndex % colors.count])
-                            .position(position)
-                            .rotationEffect(.degrees(particle.rotation * elapsed))
-                            .opacity(opacity)
-                    }
+                for index in 0..<particleCount {
+                    let particle = particle(for: index, trigger: trigger)
+                    let position = particle.position(at: elapsed, from: origin)
+                    var resolved = context.resolveSymbol(id: index)!
+                    resolved.shading = .color(colors[particle.colorIndex % colors.count].opacity(max(0, 1 - elapsed / duration)))
+
+                    context.opacity = max(0, 1 - elapsed / duration)
+                    context.translateBy(x: position.x, y: position.y)
+                    context.rotate(by: .degrees(particle.rotation * elapsed))
+                    context.draw(resolved, at: .zero)
+                    context.rotate(by: .degrees(-particle.rotation * elapsed))
+                    context.translateBy(x: -position.x, y: -position.y)
+                }
+            } symbols: {
+                ForEach(0..<particleCount, id: \.self) { index in
+                    ConfettiSymbol(particle: particle(for: index, trigger: trigger))
+                        .tag(index)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
         .onChange(of: trigger) { _, newValue in
             guard newValue != lastTrigger else { return }
@@ -68,6 +73,15 @@ struct StarConfettiBurst: View {
     private func pseudoRandom(_ input: Double) -> Double {
         let value = sin(input * 12.9898) * 43758.5453
         return value - floor(value)
+    }
+}
+
+private struct ConfettiSymbol: View {
+    let particle: ConfettiParticle
+
+    var body: some View {
+        Image(systemName: "star.fill")
+            .font(.system(size: particle.size, weight: .black))
     }
 }
 
