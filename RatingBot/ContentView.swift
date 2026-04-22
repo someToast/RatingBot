@@ -7,9 +7,6 @@ struct ContentView: View {
     @State private var pendingRating: Int?
     @State private var fiveStarButtonFrame: CGRect = .zero
     @State private var confettiTrigger = 0
-    @State private var confettiParticleSize: Double = 63
-    @State private var confettiVelocityScale: Double = 1
-    @State private var confettiGravityScale: Double = 0.5
 
     var body: some View {
         ZStack {
@@ -53,11 +50,7 @@ struct ContentView: View {
             StarConfettiBurst(
                 trigger: confettiTrigger,
                 origin: CGPoint(x: fiveStarButtonFrame.midX, y: fiveStarButtonFrame.midY),
-                configuration: ConfettiConfiguration(
-                    particleSize: CGFloat(confettiParticleSize),
-                    velocityScale: CGFloat(confettiVelocityScale),
-                    gravityScale: CGFloat(confettiGravityScale)
-                )
+                configuration: .default
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .allowsHitTesting(false)
@@ -92,36 +85,8 @@ struct ContentView: View {
                 .lineLimit(1)
                 .frame(height: 16, alignment: .top)
                 .opacity(statusText.isEmpty ? 0 : 1)
-
-            confettiTuningPanel
         }
         .frame(maxWidth: .infinity)
-    }
-
-    private var confettiTuningPanel: some View {
-        VStack(spacing: 8) {
-            confettiSliderRow(
-                title: "Size",
-                valueText: "\(Int(confettiParticleSize.rounded()))",
-                value: $confettiParticleSize,
-                range: 28...120
-            )
-
-            confettiSliderRow(
-                title: "Velocity",
-                valueText: String(format: "%.2f", confettiVelocityScale),
-                value: $confettiVelocityScale,
-                range: 0.4...1.6
-            )
-
-            confettiSliderRow(
-                title: "Gravity",
-                valueText: String(format: "%.2f", confettiGravityScale),
-                value: $confettiGravityScale,
-                range: 0.2...1.2
-            )
-        }
-        .padding(.top, 6)
     }
 
     private var transportControls: some View {
@@ -222,31 +187,6 @@ struct ContentView: View {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.prepare()
         generator.impactOccurred(intensity: 0.9)
-    }
-
-    private func confettiSliderRow(
-        title: String,
-        valueText: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>
-    ) -> some View {
-        VStack(spacing: 3) {
-            HStack {
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color(red: 199 / 255, green: 199 / 255, blue: 204 / 255))
-
-                Spacer()
-
-                Text(valueText)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color(red: 174 / 255, green: 174 / 255, blue: 178 / 255))
-                    .monospacedDigit()
-            }
-
-            Slider(value: value, in: range)
-                .tint(.white)
-        }
     }
 }
 

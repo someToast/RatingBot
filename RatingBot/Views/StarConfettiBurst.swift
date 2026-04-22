@@ -25,9 +25,9 @@ struct ConfettiConfiguration: Equatable {
     var gravityScale: CGFloat
 
     static let `default` = ConfettiConfiguration(
-        particleSize: 63,
-        velocityScale: 1,
-        gravityScale: 0.5
+        particleSize: 45,
+        velocityScale: 1.10,
+        gravityScale: 0.70
     )
 }
 
