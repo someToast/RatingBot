@@ -35,9 +35,7 @@ struct StarConfettiBurst: View {
                 }
             } symbols: {
                 ForEach(0..<particleCount, id: \.self) { index in
-                    let particle = particle(for: index, trigger: trigger)
-                    Image(systemName: "star.fill")
-                        .font(.system(size: particle.size, weight: .black))
+                    ConfettiSymbol(particle: particle(for: index, trigger: trigger))
                         .tag(index)
                 }
             }
@@ -75,6 +73,15 @@ struct StarConfettiBurst: View {
     private func pseudoRandom(_ input: Double) -> Double {
         let value = sin(input * 12.9898) * 43758.5453
         return value - floor(value)
+    }
+}
+
+private struct ConfettiSymbol: View {
+    let particle: ConfettiParticle
+
+    var body: some View {
+        Image(systemName: "star.fill")
+            .font(.system(size: particle.size, weight: .black))
     }
 }
 
