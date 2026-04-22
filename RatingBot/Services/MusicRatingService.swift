@@ -2,6 +2,58 @@ import Combine
 import Foundation
 import MediaPlayer
 
+private struct RatingActionTrace {
+    let id = UUID().uuidString.prefix(8)
+    let rating: Int
+    let source: String
+    let startedAt = ContinuousClock.now
+    var marks: [(label: String, time: ContinuousClock.Instant)] = []
+
+    init(rating: Int, source: String) {
+        self.rating = rating
+        self.source = source
+    }
+
+    mutating func mark(_ label: String) {
+        marks.append((label, ContinuousClock.now))
+    }
+
+    func logStart() {
+        print("[RatingBot][\(id)] start rating=\(rating) source=\(source)")
+    }
+
+    func logSuccess(track: NowPlayingTrack) {
+        print("[RatingBot][\(id)] success rating=\(rating) title=\"\(track.title)\" artist=\"\(track.artist)\" \(timingSummary)")
+    }
+
+    func logFailure(_ error: Error) {
+        print("[RatingBot][\(id)] failure rating=\(rating) error=\"\(error.localizedDescription)\" \(timingSummary)")
+    }
+
+    private var timingSummary: String {
+        var previous = startedAt
+        var segments: [String] = []
+
+        for mark in marks {
+            let duration = previous.duration(to: mark.time)
+            segments.append("\(mark.label)=\(duration.formattedSeconds)")
+            previous = mark.time
+        }
+
+        let total = startedAt.duration(to: ContinuousClock.now)
+        segments.append("total=\(total.formattedSeconds)")
+        return segments.joined(separator: " ")
+    }
+}
+
+private extension Duration {
+    var formattedSeconds: String {
+        let components = self.components
+        let seconds = Double(components.seconds) + (Double(components.attoseconds) / 1_000_000_000_000_000_000)
+        return String(format: "%.3fs", seconds)
+    }
+}
+
 enum MusicRatingError: LocalizedError {
     case accessDenied
     case noSongPlaying
@@ -109,27 +161,44 @@ final class MusicRatingService: ObservableObject {
             throw MusicRatingError.invalidRating
         }
 
-        try await ensureAuthorized()
+        var trace = RatingActionTrace(
+            rating: rating,
+            source: shouldSpeak ? "app" : "intent"
+        )
+        trace.logStart()
 
-        guard let item = player.nowPlayingItem else {
-            refreshNowPlaying()
-            throw MusicRatingError.noSongPlaying
+        do {
+            try await ensureAuthorized()
+            trace.mark("auth")
+
+            guard let item = player.nowPlayingItem else {
+                refreshNowPlaying()
+                throw MusicRatingError.noSongPlaying
+            }
+
+            let playlist = try await playlist(for: rating)
+            trace.mark("playlist")
+            try await add(item, to: playlist)
+            trace.mark("add")
+
+            let track = item.songRaterTrack
+            assignedRating = rating
+            currentTrackIdentifier = trackIdentifier(for: item)
+            currentTrack = track
+            statusMessage = "Added to \(playlistName(for: rating))"
+
+            if shouldSpeak {
+                RatingSpeaker.shared.speak(rating: rating, track: track)
+            }
+            trace.mark("confirm")
+            trace.logSuccess(track: track)
+
+            return track
+        } catch {
+            trace.mark("error")
+            trace.logFailure(error)
+            throw error
         }
-
-        let playlist = try await playlist(for: rating)
-        try await add(item, to: playlist)
-
-        let track = item.songRaterTrack
-        assignedRating = rating
-        currentTrackIdentifier = trackIdentifier(for: item)
-        currentTrack = track
-        statusMessage = "Added to \(playlistName(for: rating))"
-
-        if shouldSpeak {
-            RatingSpeaker.shared.speak(rating: rating, track: track)
-        }
-
-        return track
     }
 
     @objc private func nowPlayingDidChange() {
