@@ -4,18 +4,31 @@ import UIKit
 struct StarConfettiBurst: UIViewRepresentable {
     let trigger: Int
     let origin: CGPoint
+    let configuration: ConfettiConfiguration
 
     func makeUIView(context: Context) -> ConfettiBurstView {
         ConfettiBurstView()
     }
 
     func updateUIView(_ uiView: ConfettiBurstView, context: Context) {
-        uiView.update(trigger: trigger, origin: origin)
+        uiView.update(trigger: trigger, origin: origin, configuration: configuration)
     }
 
     static func dismantleUIView(_ uiView: ConfettiBurstView, coordinator: ()) {
         uiView.reset()
     }
+}
+
+struct ConfettiConfiguration: Equatable {
+    var particleSize: CGFloat
+    var velocityScale: CGFloat
+    var gravityScale: CGFloat
+
+    static let `default` = ConfettiConfiguration(
+        particleSize: 63,
+        velocityScale: 1,
+        gravityScale: 0.5
+    )
 }
 
 final class ConfettiBurstView: UIView {
@@ -33,7 +46,7 @@ final class ConfettiBurstView: UIView {
     ]
     private let particleCount = 48
     private let burstDuration: CFTimeInterval = 8.5
-    private let particleSize: CGFloat = 84
+    private var configuration = ConfettiConfiguration.default
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,7 +59,8 @@ final class ConfettiBurstView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(trigger: Int, origin: CGPoint) {
+    func update(trigger: Int, origin: CGPoint, configuration: ConfettiConfiguration) {
+        self.configuration = configuration
         guard trigger > lastTrigger, origin != .zero, bounds.width > 0, bounds.height > 0 else {
             lastTrigger = max(lastTrigger, trigger)
             return
@@ -67,7 +81,7 @@ final class ConfettiBurstView: UIView {
             let color = colors[index % colors.count]
             let particleLayer = CALayer()
             particleLayer.contents = particleImage(for: color)
-            particleLayer.bounds = CGRect(x: 0, y: 0, width: particleSize, height: particleSize)
+            particleLayer.bounds = CGRect(x: 0, y: 0, width: configuration.particleSize, height: configuration.particleSize)
             particleLayer.position = origin
             particleLayer.opacity = 1
             particleLayer.contentsScale = UIScreen.main.scale
@@ -75,9 +89,9 @@ final class ConfettiBurstView: UIView {
             layer.addSublayer(particleLayer)
 
             let horizontalDirection = ((pseudoRandom(base + 1) * 2) - 1)
-            let xVelocity = horizontalDirection * (165 + pseudoRandom(base + 2) * 185)
-            let initialYVelocity = -(517.5 + pseudoRandom(base + 3) * 187.5)
-            let gravity = 545 + pseudoRandom(base + 4) * 90
+            let xVelocity = horizontalDirection * (165 + pseudoRandom(base + 2) * 185) * configuration.velocityScale
+            let initialYVelocity = -(517.5 + pseudoRandom(base + 3) * 187.5) * configuration.velocityScale
+            let gravity = (545 + pseudoRandom(base + 4) * 90) * configuration.gravityScale
             let rotationAmount = ((pseudoRandom(base + 5) * 2) - 1) * CGFloat.pi * (3.6 + pseudoRandom(base + 6) * 2.8)
             let scale = 0.9 + pseudoRandom(base + 7) * 0.35
             let durationJitter = 0.88 + pseudoRandom(base + 8) * 0.28
