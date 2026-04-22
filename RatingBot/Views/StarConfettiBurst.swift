@@ -17,6 +17,7 @@ struct StarConfettiBurst: UIViewRepresentable {
 final class ConfettiEmitterView: UIView {
     private let confettiLayer = CAEmitterLayer()
     private var lastTrigger = 0
+    private var particleImages: [UIColor: CGImage] = [:]
     private let colors: [UIColor] = [
         .systemYellow,
         .systemOrange,
@@ -71,16 +72,15 @@ final class ConfettiEmitterView: UIView {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
             self?.confettiLayer.birthRate = 0
-            self?.confettiLayer.emitterCells = nil
         }
     }
 
     private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
         let cell = CAEmitterCell()
-        cell.contents = starImage(color: color).cgImage
+        cell.contents = particleImage(for: color)
         cell.birthRate = 4
-        cell.lifetime = 6.8
-        cell.lifetimeRange = 1.2
+        cell.lifetime = 8.5
+        cell.lifetimeRange = 1.4
         cell.velocity = 335
         cell.velocityRange = 125
         cell.emissionLongitude = -.pi / 2
@@ -91,16 +91,40 @@ final class ConfettiEmitterView: UIView {
         cell.spinRange = 4.8
         cell.scale = 0.36
         cell.scaleRange = 0.08
-        cell.alphaSpeed = -0.08
+        cell.alphaSpeed = -0.03
         cell.name = "star-\(seed)"
         return cell
     }
 
+    private func particleImage(for color: UIColor) -> CGImage? {
+        if let cached = particleImages[color] {
+            return cached
+        }
+
+        let image = starImage(color: color).cgImage
+        if let image {
+            particleImages[color] = image
+        }
+        return image
+    }
+
     private func starImage(color: UIColor) -> UIImage {
         let config = UIImage.SymbolConfiguration(pointSize: 42, weight: .black)
-        let baseImage = UIImage(systemName: "star.fill", withConfiguration: config)?
+        let symbolImage = UIImage(systemName: "star.fill", withConfiguration: config)?
             .withTintColor(color, renderingMode: .alwaysOriginal)
 
-        return baseImage ?? UIImage()
+        guard let symbolImage else { return UIImage() }
+
+        let renderer = UIGraphicsImageRenderer(size: symbolImage.size)
+        return renderer.image { _ in
+            symbolImage.draw(in: CGRect(origin: .zero, size: symbolImage.size))
+        }
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil {
+            confettiLayer.birthRate = 0
+        }
     }
 }
