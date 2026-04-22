@@ -23,7 +23,7 @@ final class ConfettiEmitterView: UIView {
     private var particleImages: [UIColor: CGImage] = [:]
     private var stopEmissionWorkItem: DispatchWorkItem?
     private var cleanupWorkItem: DispatchWorkItem?
-    private weak var activeEmitterLayer: CAEmitterLayer?
+    private var activeEmitterLayer: CAEmitterLayer?
     private let colors: [UIColor] = [
         .systemYellow,
         .systemOrange,
@@ -72,18 +72,24 @@ final class ConfettiEmitterView: UIView {
         emitterLayer.emitterShape = .point
         emitterLayer.emitterMode = .points
         emitterLayer.renderMode = .unordered
+        emitterLayer.seed = UInt32.random(in: 1...UInt32.max)
         emitterLayer.emitterPosition = origin
         emitterLayer.emitterCells = colors.enumerated().map { index, color in
             makeCell(color: color, seed: index)
         }
+        emitterLayer.birthRate = 0
         layer.addSublayer(emitterLayer)
         activeEmitterLayer = emitterLayer
 
-        emitterLayer.beginTime = CACurrentMediaTime()
-        emitterLayer.birthRate = 1
+        let startTime = emitterLayer.convertTime(CACurrentMediaTime(), from: nil)
+        emitterLayer.beginTime = startTime
 
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.activeEmitterLayer?.birthRate = 0
+        DispatchQueue.main.async { [weak emitterLayer] in
+            emitterLayer?.birthRate = 1
+        }
+
+        let workItem = DispatchWorkItem { [weak emitterLayer] in
+            emitterLayer?.birthRate = 0
         }
         stopEmissionWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
