@@ -18,6 +18,7 @@ final class ConfettiEmitterView: UIView {
     private let confettiLayer = CAEmitterLayer()
     private var lastTrigger = 0
     private var particleImages: [UIColor: CGImage] = [:]
+    private var stopEmissionWorkItem: DispatchWorkItem?
     private let colors: [UIColor] = [
         .systemYellow,
         .systemOrange,
@@ -62,17 +63,24 @@ final class ConfettiEmitterView: UIView {
     }
 
     private func emit(from origin: CGPoint) {
+        stopEmissionWorkItem?.cancel()
+        confettiLayer.removeAllAnimations()
+        confettiLayer.birthRate = 0
+        confettiLayer.emitterCells = nil
         confettiLayer.emitterPosition = origin
         confettiLayer.emitterCells = colors.enumerated().map { index, color in
             makeCell(color: color, seed: index)
         }
 
         confettiLayer.beginTime = CACurrentMediaTime()
+        confettiLayer.timeOffset = 0
         confettiLayer.birthRate = 1
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             self?.confettiLayer.birthRate = 0
         }
+        stopEmissionWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
     }
 
     private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
@@ -124,6 +132,7 @@ final class ConfettiEmitterView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil {
+            stopEmissionWorkItem?.cancel()
             confettiLayer.birthRate = 0
         }
     }
