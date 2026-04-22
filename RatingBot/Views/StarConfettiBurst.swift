@@ -69,7 +69,7 @@ final class ConfettiEmitterView: UIView {
         confettiLayer.beginTime = CACurrentMediaTime()
         confettiLayer.birthRate = 1
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
             self?.confettiLayer.birthRate = 0
             self?.confettiLayer.emitterCells = nil
         }
@@ -77,30 +77,29 @@ final class ConfettiEmitterView: UIView {
 
     private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
         let cell = CAEmitterCell()
-        cell.contents = starImage().cgImage
-        cell.birthRate = 14
-        cell.lifetime = 3.6
-        cell.lifetimeRange = 0.6
-        cell.velocity = 285
-        cell.velocityRange = 70
+        cell.contents = starImage(color: color).cgImage
+        cell.birthRate = 4
+        cell.lifetime = 6.8
+        cell.lifetimeRange = 1.2
+        cell.velocity = 335
+        cell.velocityRange = 125
         cell.emissionLongitude = -.pi / 2
-        cell.emissionRange = .pi / 2.8
-        cell.yAcceleration = 320
-        cell.xAcceleration = 8
-        cell.spin = 3.4
-        cell.spinRange = 5.5
-        cell.scale = 0.12
-        cell.scaleRange = 0.06
-        cell.alphaSpeed = -0.28
-        cell.color = color.cgColor
+        cell.emissionRange = .pi / 1.9
+        cell.yAcceleration = 285
+        cell.xAcceleration = 0
+        cell.spin = 2.6
+        cell.spinRange = 4.8
+        cell.scale = 0.36
+        cell.scaleRange = 0.08
+        cell.alphaSpeed = -0.08
         cell.name = "star-\(seed)"
         return cell
     }
 
-    private func starImage() -> UIImage {
+    private func starImage(color: UIColor) -> UIImage {
         let config = UIImage.SymbolConfiguration(pointSize: 42, weight: .black)
         let baseImage = UIImage(systemName: "star.fill", withConfiguration: config)?
-            .withTintColor(.white, renderingMode: .alwaysOriginal)
+            .withTintColor(color, renderingMode: .alwaysOriginal)
 
         return baseImage ?? UIImage()
     }
