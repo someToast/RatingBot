@@ -5,25 +5,22 @@ struct StarConfettiBurst: UIViewRepresentable {
     let trigger: Int
     let origin: CGPoint
 
-    func makeUIView(context: Context) -> ConfettiEmitterView {
-        ConfettiEmitterView()
+    func makeUIView(context: Context) -> ConfettiBurstView {
+        ConfettiBurstView()
     }
 
-    func updateUIView(_ uiView: ConfettiEmitterView, context: Context) {
+    func updateUIView(_ uiView: ConfettiBurstView, context: Context) {
         uiView.update(trigger: trigger, origin: origin)
     }
 
-    static func dismantleUIView(_ uiView: ConfettiEmitterView, coordinator: ()) {
+    static func dismantleUIView(_ uiView: ConfettiBurstView, coordinator: ()) {
         uiView.reset()
     }
 }
 
-final class ConfettiEmitterView: UIView {
+final class ConfettiBurstView: UIView {
     private var lastTrigger = 0
     private var particleImages: [UIColor: CGImage] = [:]
-    private var stopEmissionWorkItem: DispatchWorkItem?
-    private var cleanupWorkItem: DispatchWorkItem?
-    private var activeEmitterLayer: CAEmitterLayer?
     private let colors: [UIColor] = [
         .systemYellow,
         .systemOrange,
@@ -34,105 +31,104 @@ final class ConfettiEmitterView: UIView {
         .white,
         .systemRed
     ]
+    private let particleCount = 48
+    private let burstDuration: CFTimeInterval = 8.5
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
         backgroundColor = .clear
+        clipsToBounds = false
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        activeEmitterLayer?.frame = bounds
-    }
-
     func update(trigger: Int, origin: CGPoint) {
-        print("[RatingBot][Confetti] update trigger=\(trigger) origin=\(origin) bounds=\(bounds)")
-        guard trigger > lastTrigger, origin != .zero else {
+        guard trigger > lastTrigger, origin != .zero, bounds.width > 0, bounds.height > 0 else {
             lastTrigger = max(lastTrigger, trigger)
             return
         }
 
         lastTrigger = trigger
-        emit(from: clamped(origin: origin))
-    }
-
-    private func emit(from origin: CGPoint) {
-        print("[RatingBot][Confetti] emit origin=\(origin) bounds=\(bounds)")
-        stopEmissionWorkItem?.cancel()
-        cleanupWorkItem?.cancel()
-        activeEmitterLayer?.removeFromSuperlayer()
-
-        let emitterLayer = CAEmitterLayer()
-        emitterLayer.frame = bounds
-        emitterLayer.emitterShape = .point
-        emitterLayer.emitterMode = .points
-        emitterLayer.renderMode = .unordered
-        emitterLayer.seed = UInt32.random(in: 1...UInt32.max)
-        emitterLayer.emitterPosition = origin
-        emitterLayer.emitterCells = colors.enumerated().map { index, color in
-            makeCell(color: color, seed: index)
-        }
-        emitterLayer.birthRate = 0
-        layer.addSublayer(emitterLayer)
-        activeEmitterLayer = emitterLayer
-
-        let startTime = emitterLayer.convertTime(CACurrentMediaTime(), from: nil)
-        emitterLayer.beginTime = startTime
-
-        DispatchQueue.main.async { [weak emitterLayer] in
-            emitterLayer?.birthRate = 1
-        }
-
-        let workItem = DispatchWorkItem { [weak emitterLayer] in
-            emitterLayer?.birthRate = 0
-        }
-        stopEmissionWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
-
-        let cleanupWorkItem = DispatchWorkItem { [weak self, weak emitterLayer] in
-            guard let self, let emitterLayer else { return }
-            emitterLayer.removeFromSuperlayer()
-            if self.activeEmitterLayer === emitterLayer {
-                self.activeEmitterLayer = nil
-            }
-        }
-        self.cleanupWorkItem = cleanupWorkItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.5, execute: cleanupWorkItem)
+        burst(from: clamped(origin: origin), seed: trigger)
     }
 
     func reset() {
-        stopEmissionWorkItem?.cancel()
-        cleanupWorkItem?.cancel()
-        activeEmitterLayer?.birthRate = 0
-        activeEmitterLayer?.removeFromSuperlayer()
-        activeEmitterLayer = nil
+        layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         lastTrigger = 0
     }
 
-    private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
-        let cell = CAEmitterCell()
-        cell.contents = particleImage(for: color)
-        cell.birthRate = 6
-        cell.lifetime = 8.5
-        cell.lifetimeRange = 1.4
-        cell.velocity = 670
-        cell.velocityRange = 250
-        cell.emissionLongitude = -.pi / 2
-        cell.emissionRange = .pi / 1.9
-        cell.yAcceleration = 570
-        cell.xAcceleration = 0
-        cell.spin = 2.6
-        cell.spinRange = 4.8
-        cell.scale = 0.36
-        cell.scaleRange = 0.08
-        cell.alphaSpeed = -0.03
-        cell.name = "star-\(seed)"
-        return cell
+    private func burst(from origin: CGPoint, seed: Int) {
+        for index in 0..<particleCount {
+            let base = Double(seed * 97 + index * 37)
+            let color = colors[index % colors.count]
+            let particleLayer = CALayer()
+            particleLayer.contents = particleImage(for: color)
+            particleLayer.bounds = CGRect(x: 0, y: 0, width: 42, height: 42)
+            particleLayer.position = origin
+            particleLayer.opacity = 1
+            particleLayer.contentsScale = UIScreen.main.scale
+
+            layer.addSublayer(particleLayer)
+
+            let xVelocity = ((pseudoRandom(base + 1) * 2) - 1) * (240 + pseudoRandom(base + 2) * 260)
+            let initialYVelocity = -(670 + pseudoRandom(base + 3) * 280)
+            let gravity = 570 + pseudoRandom(base + 4) * 140
+            let drift = ((pseudoRandom(base + 5) * 2) - 1) * 30
+            let rotationAmount = ((pseudoRandom(base + 6) * 2) - 1) * CGFloat.pi * (3 + pseudoRandom(base + 7) * 4)
+            let scale = 0.9 + pseudoRandom(base + 8) * 0.35
+
+            let start = CGPoint(x: origin.x, y: origin.y)
+            let peak = CGPoint(
+                x: origin.x + (xVelocity * 0.35),
+                y: origin.y + (initialYVelocity * 0.35) + (0.5 * gravity * 0.35 * 0.35)
+            )
+            let end = CGPoint(
+                x: origin.x + (xVelocity * burstDuration) + drift,
+                y: origin.y + (initialYVelocity * burstDuration) + (0.5 * gravity * burstDuration * burstDuration)
+            )
+
+            let path = UIBezierPath()
+            path.move(to: start)
+            path.addQuadCurve(to: end, controlPoint: peak)
+
+            let positionAnimation = CAKeyframeAnimation(keyPath: "position")
+            positionAnimation.path = path.cgPath
+            positionAnimation.calculationMode = .paced
+            positionAnimation.duration = burstDuration
+            positionAnimation.timingFunctions = [CAMediaTimingFunction(name: .easeOut)]
+
+            let rotationAnimation = CABasicAnimation(keyPath: "transform.rotation")
+            rotationAnimation.fromValue = 0
+            rotationAnimation.toValue = rotationAmount
+            rotationAnimation.duration = burstDuration
+
+            let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
+            scaleAnimation.fromValue = scale * 0.92
+            scaleAnimation.toValue = scale
+            scaleAnimation.duration = 0.18
+            scaleAnimation.autoreverses = true
+
+            let fadeAnimation = CAKeyframeAnimation(keyPath: "opacity")
+            fadeAnimation.values = [1, 1, 0.92, 0]
+            fadeAnimation.keyTimes = [0, 0.55, 0.82, 1]
+            fadeAnimation.duration = burstDuration
+
+            let animationGroup = CAAnimationGroup()
+            animationGroup.animations = [positionAnimation, rotationAnimation, scaleAnimation, fadeAnimation]
+            animationGroup.duration = burstDuration
+            animationGroup.isRemovedOnCompletion = false
+            animationGroup.fillMode = .forwards
+
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                particleLayer.removeFromSuperlayer()
+            }
+            particleLayer.add(animationGroup, forKey: "confettiBurst")
+            CATransaction.commit()
+        }
     }
 
     private func particleImage(for color: UIColor) -> CGImage? {
@@ -160,17 +156,15 @@ final class ConfettiEmitterView: UIView {
         }
     }
 
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        if window == nil {
-            reset()
-        }
-    }
-
     private func clamped(origin: CGPoint) -> CGPoint {
         CGPoint(
             x: min(max(origin.x, 0), bounds.width),
             y: min(max(origin.y, 0), bounds.height)
         )
+    }
+
+    private func pseudoRandom(_ input: Double) -> CGFloat {
+        let value = sin(input * 12.9898) * 43758.5453
+        return CGFloat(value - floor(value))
     }
 }
