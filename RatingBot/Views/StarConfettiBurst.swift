@@ -56,17 +56,19 @@ struct StarConfettiBurst: View {
         Canvas { context, _ in
             guard trigger > 0, elapsed >= 0, elapsed <= duration, origin != .zero else { return }
 
+            let opacity = max(0, 1 - elapsed / duration)
+
             for index in 0..<particleCount {
                 let particle = particle(for: index, trigger: trigger)
                 let position = particle.position(at: elapsed, from: origin)
                 let resolved = context.resolveSymbol(id: index)!
 
-                context.opacity = max(0, 1 - elapsed / duration)
-                context.translateBy(x: position.x, y: position.y)
-                context.rotate(by: .degrees(particle.rotation * elapsed))
-                context.draw(resolved, at: .zero)
-                context.rotate(by: .degrees(-particle.rotation * elapsed))
-                context.translateBy(x: -position.x, y: -position.y)
+                context.drawLayer { layer in
+                    layer.opacity = opacity
+                    layer.translateBy(x: position.x, y: position.y)
+                    layer.rotate(by: .degrees(particle.rotation * elapsed))
+                    layer.draw(resolved, at: .zero)
+                }
             }
         } symbols: {
             confettiSymbols
