@@ -34,10 +34,7 @@ struct StarConfettiBurst: View {
                     context.translateBy(x: -position.x, y: -position.y)
                 }
             } symbols: {
-                ForEach(0..<particleCount, id: \.self) { index in
-                    ConfettiSymbol(particle: particle(for: index, trigger: trigger))
-                        .tag(index)
-                }
+                confettiSymbols
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -73,6 +70,14 @@ struct StarConfettiBurst: View {
     private func pseudoRandom(_ input: Double) -> Double {
         let value = sin(input * 12.9898) * 43758.5453
         return value - floor(value)
+    }
+
+    @ViewBuilder
+    private var confettiSymbols: some View {
+        ForEach(0..<particleCount, id: \.self) { index in
+            ConfettiSymbol(particle: particle(for: index, trigger: trigger))
+                .tag(index)
+        }
     }
 }
 
