@@ -73,37 +73,31 @@ final class ConfettiBurstView: UIView {
 
             layer.addSublayer(particleLayer)
 
-            let xVelocity = ((pseudoRandom(base + 1) * 2) - 1) * (240 + pseudoRandom(base + 2) * 260)
-            let initialYVelocity = -(670 + pseudoRandom(base + 3) * 280)
-            let gravity = 570 + pseudoRandom(base + 4) * 140
-            let drift = ((pseudoRandom(base + 5) * 2) - 1) * 30
-            let rotationAmount = ((pseudoRandom(base + 6) * 2) - 1) * CGFloat.pi * (3 + pseudoRandom(base + 7) * 4)
-            let scale = 0.9 + pseudoRandom(base + 8) * 0.35
-
-            let start = CGPoint(x: origin.x, y: origin.y)
-            let peak = CGPoint(
-                x: origin.x + (xVelocity * 0.35),
-                y: origin.y + (initialYVelocity * 0.35) + (0.5 * gravity * 0.35 * 0.35)
+            let horizontalDirection = ((pseudoRandom(base + 1) * 2) - 1)
+            let xVelocity = horizontalDirection * (165 + pseudoRandom(base + 2) * 185)
+            let initialYVelocity = -(690 + pseudoRandom(base + 3) * 250)
+            let gravity = 545 + pseudoRandom(base + 4) * 90
+            let rotationAmount = ((pseudoRandom(base + 5) * 2) - 1) * CGFloat.pi * (3.6 + pseudoRandom(base + 6) * 2.8)
+            let scale = 0.9 + pseudoRandom(base + 7) * 0.35
+            let durationJitter = 0.88 + pseudoRandom(base + 8) * 0.28
+            let particleDuration = burstDuration * durationJitter
+            let path = ballisticPath(
+                origin: origin,
+                xVelocity: xVelocity,
+                initialYVelocity: initialYVelocity,
+                gravity: gravity,
+                duration: particleDuration
             )
-            let end = CGPoint(
-                x: origin.x + (xVelocity * burstDuration) + drift,
-                y: origin.y + (initialYVelocity * burstDuration) + (0.5 * gravity * burstDuration * burstDuration)
-            )
-
-            let path = UIBezierPath()
-            path.move(to: start)
-            path.addQuadCurve(to: end, controlPoint: peak)
 
             let positionAnimation = CAKeyframeAnimation(keyPath: "position")
             positionAnimation.path = path.cgPath
             positionAnimation.calculationMode = .paced
-            positionAnimation.duration = burstDuration
-            positionAnimation.timingFunctions = [CAMediaTimingFunction(name: .easeOut)]
+            positionAnimation.duration = particleDuration
 
             let rotationAnimation = CABasicAnimation(keyPath: "transform.rotation")
             rotationAnimation.fromValue = 0
             rotationAnimation.toValue = rotationAmount
-            rotationAnimation.duration = burstDuration
+            rotationAnimation.duration = particleDuration
 
             let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
             scaleAnimation.fromValue = scale * 0.92
@@ -114,11 +108,11 @@ final class ConfettiBurstView: UIView {
             let fadeAnimation = CAKeyframeAnimation(keyPath: "opacity")
             fadeAnimation.values = [1, 1, 0.92, 0]
             fadeAnimation.keyTimes = [0, 0.55, 0.82, 1]
-            fadeAnimation.duration = burstDuration
+            fadeAnimation.duration = particleDuration
 
             let animationGroup = CAAnimationGroup()
             animationGroup.animations = [positionAnimation, rotationAnimation, scaleAnimation, fadeAnimation]
-            animationGroup.duration = burstDuration
+            animationGroup.duration = particleDuration
             animationGroup.isRemovedOnCompletion = false
             animationGroup.fillMode = .forwards
 
@@ -129,6 +123,27 @@ final class ConfettiBurstView: UIView {
             particleLayer.add(animationGroup, forKey: "confettiBurst")
             CATransaction.commit()
         }
+    }
+
+    private func ballisticPath(
+        origin: CGPoint,
+        xVelocity: CGFloat,
+        initialYVelocity: CGFloat,
+        gravity: CGFloat,
+        duration: CFTimeInterval
+    ) -> UIBezierPath {
+        let path = UIBezierPath()
+        path.move(to: origin)
+
+        let steps = 72
+        for step in 1...steps {
+            let t = CGFloat(duration) * CGFloat(step) / CGFloat(steps)
+            let x = origin.x + (xVelocity * t)
+            let y = origin.y + (initialYVelocity * t) + (0.5 * gravity * t * t)
+            path.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        return path
     }
 
     private func particleImage(for color: UIColor) -> CGImage? {
