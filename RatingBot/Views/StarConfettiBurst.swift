@@ -15,27 +15,7 @@ struct StarConfettiBurst: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
-            let elapsed = timeline.date.timeIntervalSince(startDate)
-
-            Canvas { context, _ in
-                guard trigger > 0, elapsed >= 0, elapsed <= duration, origin != .zero else { return }
-
-                for index in 0..<particleCount {
-                    let particle = particle(for: index, trigger: trigger)
-                    let position = particle.position(at: elapsed, from: origin)
-                    var resolved = context.resolveSymbol(id: index)!
-                    resolved.shading = .color(colors[particle.colorIndex % colors.count].opacity(max(0, 1 - elapsed / duration)))
-
-                    context.opacity = max(0, 1 - elapsed / duration)
-                    context.translateBy(x: position.x, y: position.y)
-                    context.rotate(by: .degrees(particle.rotation * elapsed))
-                    context.draw(resolved, at: .zero)
-                    context.rotate(by: .degrees(-particle.rotation * elapsed))
-                    context.translateBy(x: -position.x, y: -position.y)
-                }
-            } symbols: {
-                confettiSymbols
-            }
+            confettiCanvas(elapsed: timeline.date.timeIntervalSince(startDate))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
@@ -70,6 +50,28 @@ struct StarConfettiBurst: View {
     private func pseudoRandom(_ input: Double) -> Double {
         let value = sin(input * 12.9898) * 43758.5453
         return value - floor(value)
+    }
+
+    private func confettiCanvas(elapsed: TimeInterval) -> some View {
+        Canvas { context, _ in
+            guard trigger > 0, elapsed >= 0, elapsed <= duration, origin != .zero else { return }
+
+            for index in 0..<particleCount {
+                let particle = particle(for: index, trigger: trigger)
+                let position = particle.position(at: elapsed, from: origin)
+                var resolved = context.resolveSymbol(id: index)!
+                resolved.shading = .color(colors[particle.colorIndex % colors.count].opacity(max(0, 1 - elapsed / duration)))
+
+                context.opacity = max(0, 1 - elapsed / duration)
+                context.translateBy(x: position.x, y: position.y)
+                context.rotate(by: .degrees(particle.rotation * elapsed))
+                context.draw(resolved, at: .zero)
+                context.rotate(by: .degrees(-particle.rotation * elapsed))
+                context.translateBy(x: -position.x, y: -position.y)
+            }
+        } symbols: {
+            confettiSymbols
+        }
     }
 
     @ViewBuilder
