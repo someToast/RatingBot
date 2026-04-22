@@ -15,10 +15,11 @@ struct StarConfettiBurst: UIViewRepresentable {
 }
 
 final class ConfettiEmitterView: UIView {
-    private let confettiLayer = CAEmitterLayer()
     private var lastTrigger = 0
     private var particleImages: [UIColor: CGImage] = [:]
     private var stopEmissionWorkItem: DispatchWorkItem?
+    private var cleanupWorkItem: DispatchWorkItem?
+    private weak var activeEmitterLayer: CAEmitterLayer?
     private let colors: [UIColor] = [
         .systemYellow,
         .systemOrange,
@@ -34,11 +35,6 @@ final class ConfettiEmitterView: UIView {
         super.init(frame: frame)
         isUserInteractionEnabled = false
         backgroundColor = .clear
-
-        confettiLayer.emitterShape = .point
-        confettiLayer.emitterMode = .points
-        confettiLayer.renderMode = .unordered
-        layer.addSublayer(confettiLayer)
     }
 
     required init?(coder: NSCoder) {
@@ -47,12 +43,10 @@ final class ConfettiEmitterView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        confettiLayer.frame = bounds
+        activeEmitterLayer?.frame = bounds
     }
 
     func update(trigger: Int, origin: CGPoint) {
-        confettiLayer.frame = bounds
-
         guard trigger > lastTrigger, origin != .zero else {
             lastTrigger = max(lastTrigger, trigger)
             return
@@ -64,23 +58,39 @@ final class ConfettiEmitterView: UIView {
 
     private func emit(from origin: CGPoint) {
         stopEmissionWorkItem?.cancel()
-        confettiLayer.removeAllAnimations()
-        confettiLayer.birthRate = 0
-        confettiLayer.emitterCells = nil
-        confettiLayer.emitterPosition = origin
-        confettiLayer.emitterCells = colors.enumerated().map { index, color in
+        cleanupWorkItem?.cancel()
+        activeEmitterLayer?.removeFromSuperlayer()
+
+        let emitterLayer = CAEmitterLayer()
+        emitterLayer.frame = bounds
+        emitterLayer.emitterShape = .point
+        emitterLayer.emitterMode = .points
+        emitterLayer.renderMode = .unordered
+        emitterLayer.emitterPosition = origin
+        emitterLayer.emitterCells = colors.enumerated().map { index, color in
             makeCell(color: color, seed: index)
         }
+        layer.addSublayer(emitterLayer)
+        activeEmitterLayer = emitterLayer
 
-        confettiLayer.beginTime = CACurrentMediaTime()
-        confettiLayer.timeOffset = 0
-        confettiLayer.birthRate = 1
+        emitterLayer.beginTime = CACurrentMediaTime()
+        emitterLayer.birthRate = 1
 
         let workItem = DispatchWorkItem { [weak self] in
-            self?.confettiLayer.birthRate = 0
+            self?.activeEmitterLayer?.birthRate = 0
         }
         stopEmissionWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
+
+        let cleanupWorkItem = DispatchWorkItem { [weak self, weak emitterLayer] in
+            guard let self, let emitterLayer else { return }
+            emitterLayer.removeFromSuperlayer()
+            if self.activeEmitterLayer === emitterLayer {
+                self.activeEmitterLayer = nil
+            }
+        }
+        self.cleanupWorkItem = cleanupWorkItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.5, execute: cleanupWorkItem)
     }
 
     private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
@@ -133,7 +143,10 @@ final class ConfettiEmitterView: UIView {
         super.didMoveToWindow()
         if window == nil {
             stopEmissionWorkItem?.cancel()
-            confettiLayer.birthRate = 0
+            cleanupWorkItem?.cancel()
+            activeEmitterLayer?.birthRate = 0
+            activeEmitterLayer?.removeFromSuperlayer()
+            activeEmitterLayer = nil
         }
     }
 }
