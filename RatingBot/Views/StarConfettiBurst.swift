@@ -78,14 +78,14 @@ final class ConfettiEmitterView: UIView {
     private func makeCell(color: UIColor, seed: Int) -> CAEmitterCell {
         let cell = CAEmitterCell()
         cell.contents = particleImage(for: color)
-        cell.birthRate = 4
+        cell.birthRate = 6
         cell.lifetime = 8.5
         cell.lifetimeRange = 1.4
-        cell.velocity = 335
-        cell.velocityRange = 125
+        cell.velocity = 670
+        cell.velocityRange = 250
         cell.emissionLongitude = -.pi / 2
         cell.emissionRange = .pi / 1.9
-        cell.yAcceleration = 285
+        cell.yAcceleration = 570
         cell.xAcceleration = 0
         cell.spin = 2.6
         cell.spinRange = 4.8
