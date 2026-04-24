@@ -97,7 +97,6 @@ final class MusicRatingService: ObservableObject {
         4: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1004")!,
         5: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1005")!
     ]
-    private var hasPreparedRatingPlaylists = false
     private var currentTrackIdentifier: String?
     private var playbackTimer: AnyCancellable?
 
@@ -138,9 +137,6 @@ final class MusicRatingService: ObservableObject {
             authorizationStatus = MPMediaLibrary.authorizationStatus()
         }
         refreshNowPlaying()
-        if authorizationStatus == .authorized && !hasPreparedRatingPlaylists {
-            await prepareRatingPlaylists()
-        }
     }
 
     func refreshNowPlaying() {
@@ -215,24 +211,18 @@ final class MusicRatingService: ObservableObject {
         refreshTransportStateSoon()
     }
 
+    func skipBackward30Seconds() {
+        seek(by: -30)
+    }
+
+    func skipForward30Seconds() {
+        seek(by: 30)
+    }
+
     private func ensureAuthorized() async throws {
         await requestAccessIfNeeded()
         guard authorizationStatus == .authorized else {
             throw MusicRatingError.accessDenied
-        }
-    }
-
-    private func prepareRatingPlaylists() async {
-        do {
-            for rating in 1...5 {
-                _ = try await playlist(for: rating)
-            }
-            hasPreparedRatingPlaylists = true
-            if statusMessage == "Ready" {
-                statusMessage = "Rating playlists ready"
-            }
-        } catch {
-            statusMessage = error.localizedDescription
         }
     }
 
@@ -259,7 +249,9 @@ final class MusicRatingService: ObservableObject {
     }
 
     private func add(_ item: MPMediaItem, to playlist: MPMediaPlaylist) async throws {
-        if let storeID = item.playbackStoreID.nilIfBlank, storeID != "0" {
+        if item.persistentID != 0 {
+            try await addMediaItem(item, to: playlist)
+        } else if let storeID = item.playbackStoreID.nilIfBlank, storeID != "0" {
             try await addStoreItem(storeID, to: playlist)
         } else {
             try await addMediaItem(item, to: playlist)
@@ -295,7 +287,7 @@ final class MusicRatingService: ObservableObject {
     }
 
     private func trackIdentifier(for item: MPMediaItem) -> String {
-        if let storeID = item.playbackStoreID.nilIfBlank {
+        if let storeID = item.playbackStoreID.nilIfBlank, storeID != "0" {
             return "store:\(storeID)"
         }
         if item.persistentID != 0 {
@@ -316,6 +308,13 @@ final class MusicRatingService: ObservableObject {
         } else {
             currentPlaybackTime = 0
         }
+    }
+
+    private func seek(by interval: TimeInterval) {
+        updatePlaybackMetrics()
+        let targetTime = min(max(currentPlaybackTime + interval, 0), playbackDuration)
+        player.currentPlaybackTime = targetTime
+        currentPlaybackTime = targetTime
     }
 
     private func refreshTransportStateSoon() {

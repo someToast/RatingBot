@@ -78,32 +78,44 @@ struct ContentView: View {
                 .minimumScaleFactor(0.7)
                 .foregroundStyle(Color(red: 199 / 255, green: 199 / 255, blue: 204 / 255))
                 .tracking(-0.25)
-
-            Text(statusText)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color(red: 174 / 255, green: 174 / 255, blue: 178 / 255))
-                .lineLimit(1)
-                .frame(height: 16, alignment: .top)
-                .opacity(statusText.isEmpty ? 0 : 1)
         }
         .frame(maxWidth: .infinity)
     }
 
     private var transportControls: some View {
-        HStack(spacing: 0) {
-            transportButton(systemName: "backward.fill", action: musicService.skipToPreviousTrack)
+        GeometryReader { geometry in
+            let buttonSize = min(80, max(48, (geometry.size.width - 112) / 4))
 
-            Spacer(minLength: 18)
+            HStack(spacing: 0) {
+                transportButton(systemName: "backward.fill", size: buttonSize, action: musicService.skipToPreviousTrack)
+                transportButton(
+                    systemName: "30.arrow.trianglehead.counterclockwise",
+                    size: buttonSize,
+                    showsRing: false,
+                    action: musicService.skipBackward30Seconds
+                )
 
-            Text(remainingTimeText)
-                .font(.system(size: 30, weight: .semibold, design: .rounded))
-                .tracking(-0.43)
-                .monospacedDigit()
-                .frame(maxWidth: .infinity)
+                Spacer(minLength: 8)
 
-            Spacer(minLength: 18)
+                Text(remainingTimeText)
+                    .font(.system(size: min(30, buttonSize * 0.5), weight: .semibold, design: .rounded))
+                    .tracking(-0.43)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .frame(width: 80)
 
-            transportButton(systemName: "forward.fill", action: musicService.skipToNextTrack)
+                Spacer(minLength: 8)
+
+                transportButton(
+                    systemName: "30.arrow.trianglehead.clockwise",
+                    size: buttonSize,
+                    showsRing: false,
+                    action: musicService.skipForward30Seconds
+                )
+                transportButton(systemName: "forward.fill", size: buttonSize, action: musicService.skipToNextTrack)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: 80)
     }
@@ -121,13 +133,6 @@ struct ContentView: View {
             }
         }
         .frame(height: 6)
-    }
-
-    private var statusText: String {
-        if let pendingRating {
-            return "Adding to RatingBot \(pendingRating)..."
-        }
-        return musicService.statusMessage
     }
 
     private var remainingTimeText: String {
@@ -160,18 +165,25 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func transportButton(systemName: String, action: @escaping () -> Void) -> some View {
+    private func transportButton(
+        systemName: String,
+        size: CGFloat,
+        showsRing: Bool = true,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 31, weight: .bold))
-                .frame(width: 80, height: 80)
+                .font(.system(size: size * 0.39, weight: .bold))
+                .frame(width: size, height: size)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .foregroundStyle(.white)
         .overlay {
-            Circle()
-                .strokeBorder(.white, lineWidth: 2)
+            if showsRing {
+                Circle()
+                    .strokeBorder(.white, lineWidth: 2)
+            }
         }
         .disabled(musicService.currentTrack == .empty)
     }
