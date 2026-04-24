@@ -24,7 +24,10 @@ struct ContentView: View {
                             isAssigned: musicService.assignedRating == rating
                         ) {
                             triggerButtonHaptic()
+                            pendingRating = rating
+                            speakRatingConfirmation(rating)
                             Task {
+                                try? await Task.sleep(nanoseconds: 350_000_000)
                                 await rate(rating)
                             }
                         }
@@ -59,6 +62,7 @@ struct ContentView: View {
         .background(Color(red: 0.06, green: 0.07, blue: 0.08))
         .foregroundStyle(.white)
         .task {
+            try? await Task.sleep(nanoseconds: 150_000_000)
             await musicService.requestAccessIfNeeded()
         }
         .onPreferenceChange(FiveStarButtonFrameKey.self) { fiveStarButtonFrame = $0 }
@@ -71,6 +75,7 @@ struct ContentView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.65)
                 .tracking(-0.43)
+                .frame(height: 36)
 
             Text(musicService.currentTrack.artist)
                 .font(.system(size: 21, weight: .semibold, design: .rounded))
@@ -78,8 +83,10 @@ struct ContentView: View {
                 .minimumScaleFactor(0.7)
                 .foregroundStyle(Color(red: 199 / 255, green: 199 / 255, blue: 204 / 255))
                 .tracking(-0.25)
+                .frame(height: 25)
         }
         .frame(maxWidth: .infinity)
+        .frame(height: 68)
     }
 
     private var transportControls: some View {
@@ -155,7 +162,7 @@ struct ContentView: View {
         defer { pendingRating = nil }
 
         do {
-            _ = try await musicService.rateCurrentSong(rating)
+            _ = try await musicService.rateCurrentSong(rating, shouldSpeak: false)
             if rating == 5 {
                 confettiTrigger += 1
             }
@@ -199,6 +206,11 @@ struct ContentView: View {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.prepare()
         generator.impactOccurred(intensity: 0.9)
+    }
+
+    private func speakRatingConfirmation(_ rating: Int) {
+        guard musicService.currentTrack != .empty else { return }
+        RatingSpeaker.shared.speak(rating: rating, track: musicService.currentTrack)
     }
 }
 

@@ -89,7 +89,7 @@ final class MusicRatingService: ObservableObject {
     @Published private(set) var playbackState: MPMusicPlaybackState = .stopped
     @Published var statusMessage = "Ready"
 
-    private let player = MPMusicPlayerController.systemMusicPlayer
+    private lazy var player = MPMusicPlayerController.systemMusicPlayer
     private let playlistIDs: [Int: UUID] = [
         1: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1001")!,
         2: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1002")!,
@@ -98,33 +98,12 @@ final class MusicRatingService: ObservableObject {
         5: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1005")!
     ]
     private var currentTrackIdentifier: String?
+    private var isReceivingPlaybackUpdates = false
     private var playbackTimer: AnyCancellable?
 
-    private init() {
-        refreshNowPlaying()
-        updatePlaybackMetrics()
-        player.beginGeneratingPlaybackNotifications()
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(nowPlayingDidChange),
-            name: .MPMusicPlayerControllerNowPlayingItemDidChange,
-            object: player
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(nowPlayingDidChange),
-            name: .MPMusicPlayerControllerPlaybackStateDidChange,
-            object: player
-        )
-        playbackTimer = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                self?.updatePlaybackMetrics()
-            }
-    }
+    private init() {}
 
     deinit {
-        player.endGeneratingPlaybackNotifications()
         NotificationCenter.default.removeObserver(self)
         playbackTimer?.cancel()
     }
@@ -136,10 +115,12 @@ final class MusicRatingService: ObservableObject {
         default:
             authorizationStatus = MPMediaLibrary.authorizationStatus()
         }
+        startReceivingPlaybackUpdatesIfNeeded()
         refreshNowPlaying()
     }
 
     func refreshNowPlaying() {
+        startReceivingPlaybackUpdatesIfNeeded()
         let latestIdentifier = player.nowPlayingItem.flatMap(trackIdentifier(for:))
         if latestIdentifier != currentTrackIdentifier {
             assignedRating = nil
@@ -172,21 +153,22 @@ final class MusicRatingService: ObservableObject {
                 throw MusicRatingError.noSongPlaying
             }
 
+            let track = item.songRaterTrack
+            if shouldSpeak {
+                RatingSpeaker.shared.speak(rating: rating, track: track)
+            }
+            trace.mark("confirm")
+
             let playlist = try await playlist(for: rating)
             trace.mark("playlist")
             try await add(item, to: playlist)
             trace.mark("add")
 
-            let track = item.songRaterTrack
             assignedRating = rating
             currentTrackIdentifier = trackIdentifier(for: item)
             currentTrack = track
             statusMessage = "Added to \(playlistName(for: rating))"
 
-            if shouldSpeak {
-                RatingSpeaker.shared.speak(rating: rating, track: track)
-            }
-            trace.mark("confirm")
             trace.logSuccess(track: track)
 
             return track
@@ -202,20 +184,24 @@ final class MusicRatingService: ObservableObject {
     }
 
     func skipToPreviousTrack() {
+        startReceivingPlaybackUpdatesIfNeeded()
         player.skipToPreviousItem()
         refreshTransportStateSoon()
     }
 
     func skipToNextTrack() {
+        startReceivingPlaybackUpdatesIfNeeded()
         player.skipToNextItem()
         refreshTransportStateSoon()
     }
 
     func skipBackward30Seconds() {
+        startReceivingPlaybackUpdatesIfNeeded()
         seek(by: -30)
     }
 
     func skipForward30Seconds() {
+        startReceivingPlaybackUpdatesIfNeeded()
         seek(by: 30)
     }
 
@@ -224,6 +210,30 @@ final class MusicRatingService: ObservableObject {
         guard authorizationStatus == .authorized else {
             throw MusicRatingError.accessDenied
         }
+    }
+
+    private func startReceivingPlaybackUpdatesIfNeeded() {
+        guard !isReceivingPlaybackUpdates else { return }
+
+        player.beginGeneratingPlaybackNotifications()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(nowPlayingDidChange),
+            name: .MPMusicPlayerControllerNowPlayingItemDidChange,
+            object: player
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(nowPlayingDidChange),
+            name: .MPMusicPlayerControllerPlaybackStateDidChange,
+            object: player
+        )
+        playbackTimer = Timer.publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.updatePlaybackMetrics()
+            }
+        isReceivingPlaybackUpdates = true
     }
 
     private func playlist(for rating: Int) async throws -> MPMediaPlaylist {
