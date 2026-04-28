@@ -195,6 +195,13 @@ final class MusicRatingService: ObservableObject {
         refreshTransportStateSoon()
     }
 
+    func skipToNextTrackAndPlay() {
+        startReceivingPlaybackUpdatesIfNeeded()
+        player.skipToNextItem()
+        player.play()
+        refreshTransportStateSoon()
+    }
+
     func skipBackward30Seconds() {
         startReceivingPlaybackUpdatesIfNeeded()
         seek(by: -30)
