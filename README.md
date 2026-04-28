@@ -1,6 +1,8 @@
 # RatingBot
 
-RatingBot is a single-window iPhone app for rating the track currently playing in Apple Music.
+RatingBot is a single-window iPhone app for "rating" the track currently playing in the Music app since Apple long ago removed the ability for Siri to star-rate music. It’s geared to rating music in the background by voice while doing other things.
+
+<img width="4260" height="3018" alt="RatingBot-samples" src="https://github.com/user-attachments/assets/1cec6378-a22e-4c06-8687-a6986b01a48b" />
 
 ## What It Does
 
@@ -16,7 +18,9 @@ RatingBot is a single-window iPhone app for rating the track currently playing i
 - Highlights the assigned rating button until the now-playing track changes
 - Exposes the same rating actions through App Shortcuts and Siri
 
-The playlists are looked up by stable app-maintained identifiers, so they continue to work even if the user moves them into subfolders in the Music app.
+Tapping the time remaining will toggle “Speed Mode.” With Speed Mode active, after rating a song the app will do a verbal confirmation of the star rating only and will skip the Music app to the next song.
+
+After a rating session, use the desktop Music app to select all the songs in a RatingBot playlist and assign the appropriate star rating. Those songs can then be removed from the playlist.
 
 ## Requirements
 
@@ -35,4 +39,3 @@ Supported phrasing includes variations like:
 - `Give this track three with RatingBot`
 - `Give this track 1 star using RatingBot`
 
-The app name is usually part of the built-in shortcut phrase matching. If you want a more customized Siri phrase, add one in the Shortcuts app after installing the app on your device.
