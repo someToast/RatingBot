@@ -84,6 +84,7 @@ final class MusicRatingService: ObservableObject {
     @Published private(set) var currentTrack: NowPlayingTrack = .empty
     @Published private(set) var authorizationStatus = MPMediaLibrary.authorizationStatus()
     @Published private(set) var assignedRating: Int?
+    @Published private(set) var musicAssignedRating: Int?
     @Published private(set) var playbackDuration: TimeInterval = 0
     @Published private(set) var currentPlaybackTime: TimeInterval = 0
     @Published private(set) var playbackState: MPMusicPlaybackState = .stopped
@@ -98,6 +99,7 @@ final class MusicRatingService: ObservableObject {
         5: UUID(uuidString: "79D328D8-4B0F-447B-A5DA-3B8A245A1005")!
     ]
     private var currentTrackIdentifier: String?
+    private var suppressedMusicRatingTrackIdentifier: String?
     private var isReceivingPlaybackUpdates = false
     private var playbackTimer: AnyCancellable?
 
@@ -121,16 +123,26 @@ final class MusicRatingService: ObservableObject {
 
     func refreshNowPlaying() {
         startReceivingPlaybackUpdatesIfNeeded()
-        let latestIdentifier = player.nowPlayingItem.flatMap(trackIdentifier(for:))
+        let nowPlayingItem = player.nowPlayingItem
+        let latestIdentifier = nowPlayingItem.flatMap(trackIdentifier(for:))
         if latestIdentifier != currentTrackIdentifier {
             assignedRating = nil
+            suppressedMusicRatingTrackIdentifier = nil
             if isAddedStatusMessage(statusMessage) {
                 statusMessage = ""
             }
         }
         currentTrackIdentifier = latestIdentifier
-        currentTrack = player.nowPlayingItem?.songRaterTrack ?? .empty
+        currentTrack = nowPlayingItem?.songRaterTrack ?? .empty
+        musicAssignedRating = suppressedMusicRatingTrackIdentifier == latestIdentifier
+            ? nil
+            : nowPlayingItem?.musicAssignedRating
         updatePlaybackMetrics()
+    }
+
+    func clearImportedMusicRating() {
+        suppressedMusicRatingTrackIdentifier = player.nowPlayingItem.flatMap(trackIdentifier(for:)) ?? currentTrackIdentifier
+        musicAssignedRating = nil
     }
 
     func rateCurrentSong(_ rating: Int, shouldSpeak: Bool = true) async throws -> NowPlayingTrack {
@@ -165,6 +177,8 @@ final class MusicRatingService: ObservableObject {
             trace.mark("add")
 
             assignedRating = rating
+            suppressedMusicRatingTrackIdentifier = trackIdentifier(for: item)
+            musicAssignedRating = nil
             currentTrackIdentifier = trackIdentifier(for: item)
             currentTrack = track
             statusMessage = "Added to \(playlistName(for: rating))"

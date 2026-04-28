@@ -29,7 +29,7 @@ struct ContentView: View {
                             rating: rating,
                             isPending: pendingRating == rating,
                             isDisabled: pendingRating != nil,
-                            isAssigned: musicService.assignedRating == rating
+                            assignedColor: assignedColor(for: rating)
                         ) {
                             startRating(rating)
                         }
@@ -189,7 +189,7 @@ struct ContentView: View {
                     .fill(Color(red: 50 / 255, green: 50 / 255, blue: 50 / 255))
 
                 Capsule()
-                    .fill(Color(red: 1.0, green: 141 / 255, blue: 40 / 255))
+                    .fill(progressOrange)
                     .frame(width: geometry.size.width * remainingFraction)
                     .offset(x: geometry.size.width * elapsedFraction)
             }
@@ -200,6 +200,20 @@ struct ContentView: View {
     private var remainingTimeText: String {
         let remaining = max(musicService.playbackDuration - musicService.currentPlaybackTime, 0)
         return format(timeInterval: remaining)
+    }
+
+    private var progressOrange: Color {
+        Color(red: 1.0, green: 141 / 255, blue: 40 / 255)
+    }
+
+    private func assignedColor(for rating: Int) -> Color? {
+        if musicService.assignedRating == rating {
+            return .yellow
+        }
+        if musicService.musicAssignedRating == rating {
+            return progressOrange
+        }
+        return nil
     }
 
     private var elapsedFraction: CGFloat {
@@ -214,6 +228,7 @@ struct ContentView: View {
 
     private func startRating(_ rating: Int) {
         triggerButtonHaptic()
+        musicService.clearImportedMusicRating()
         pendingRating = rating
 
         Task {

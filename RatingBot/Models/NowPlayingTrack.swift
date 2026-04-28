@@ -15,6 +15,15 @@ extension MPMediaItem {
             artist: artist?.nilIfBlank ?? albumArtist?.nilIfBlank ?? "Unknown Artist"
         )
     }
+
+    var musicAssignedRating: Int? {
+        guard let rating = value(forProperty: MPMediaItemPropertyRating) as? NSNumber else {
+            return nil
+        }
+
+        let stars = rating.intValue
+        return (1...5).contains(stars) ? stars : nil
+    }
 }
 
 extension String {

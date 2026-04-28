@@ -4,7 +4,7 @@ struct RatingButton: View {
     let rating: Int
     let isPending: Bool
     let isDisabled: Bool
-    let isAssigned: Bool
+    let assignedColor: Color?
     let action: () -> Void
 
     private var stars: String {
@@ -24,13 +24,13 @@ struct RatingButton: View {
         .buttonStyle(.plain)
         .disabled(isDisabled)
         .background(buttonColor)
-        .foregroundStyle(isAssigned ? .black : .white)
+        .foregroundStyle(assignedColor == nil ? .white : .black)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(
-                    isAssigned ? .clear : .white.opacity(0.18),
-                    lineWidth: isAssigned ? 0 : 1
+                    assignedColor == nil ? .white.opacity(0.18) : .clear,
+                    lineWidth: assignedColor == nil ? 1 : 0
                 )
         }
         .opacity(isPending ? 0.58 : 1)
@@ -38,8 +38,8 @@ struct RatingButton: View {
     }
 
     private var buttonColor: Color {
-        if isAssigned {
-            return .yellow
+        if let assignedColor {
+            return assignedColor
         }
 
         switch rating {
